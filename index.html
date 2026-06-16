@@ -905,5 +905,9 @@ function closeCGU(){document.getElementById('cguModal').classList.remove('open')
 document.getElementById('cguModal').addEventListener('click',function(e){if(e.target===this)closeCGU();});
 (function(){try{if(localStorage.getItem('bois_cgu'))document.getElementById('splashModal').style.display='none';}catch(e){}})();
 </script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/calculateur-bois/sw.js');
+  }
+</script>
 </body>
 </html>
