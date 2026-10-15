@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculateur Bois — Panne / Chevron</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6aaa3a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Calc Bois EC5">
+  <meta name="description" content="Pré-dimensionnement de pannes et chevrons bois EC5.">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f0f4f0;padding:16px;color:#1a1a1a;}
+    .container{max-width:980px;margin:0 auto;background:#fff;padding:1.75rem;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+
+    /* Topbar */
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;gap:10px;}
+    .topbar-left{display:flex;align-items:center;gap:12px;flex:1;}
+    .app-icon{font-size:36px;line-height:1;}
+    .app-titles{flex:1;}
+    .app-titles h1{font-size:18px;font-weight:700;color:#2d4a1e;line-height:1.2;}
+    .app-titles .subtitle{font-size:12px;color:#6aaa3a;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+    .btn-about{background:none;border:1px solid #ccc;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:600;color:#555;cursor:pointer;white-space:nowrap;}
+    .btn-about:hover{background:#f0f4f0;border-color:#6aaa3a;color:#2d4a1e;}
+    .btn-lang{background:#2d4a1e;border:none;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;color:#6aaa3a;cursor:pointer;white-space:nowrap;margin-left:6px;}
+    .btn-lang:hover{background:#1a3010;}
+
+    /* Type selector Panne / Chevron */
+    .calc-type-bar{display:flex;gap:8px;margin-bottom:1.25rem;border-bottom:2px solid #e0e8d8;padding-bottom:12px;}
+    .calc-type-btn{display:flex;align-items:center;gap:8px;padding:10px 20px;border:2px solid #ccc;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:#555;transition:all .2s;}
+    .calc-type-btn.active{border-color:#6aaa3a;background:#f0f7e8;color:#2d4a1e;}
+    .calc-type-btn.disabled{opacity:0.4;cursor:not-allowed;}
+    .calc-type-btn .badge{font-size:10px;background:#e0e8d8;color:#2d4a1e;padding:2px 6px;border-radius:10px;font-weight:600;}
+    .calc-type-btn.disabled .badge{background:#f0f0f0;color:#999;}
+
+    h2{font-size:14px;font-weight:700;color:#2d4a1e;margin:1.1rem 0 0.65rem;padding-bottom:5px;border-bottom:2px solid #e0e8d8;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;}
+    .full{grid-column:1/-1;}
+    .fg{display:flex;flex-direction:column;gap:4px;}
+    label{font-size:12px;font-weight:600;color:#333;}
+    input[type=number],select{padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;width:100%;font-family:inherit;background:#fff;color:#1a1a1a;-moz-appearance:textfield;}
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+    input:focus,select:focus{outline:none;border-color:#6aaa3a;box-shadow:0 0 0 3px rgba(106,170,58,0.15);}
+    .hint{font-size:10px;color:#999;margin-top:2px;}
+    .pente-info{background:#e8f0ff;border:1px solid #b0c8f0;border-radius:5px;padding:8px 12px;font-size:12px;color:#1a3a6e;margin-top:6px;line-height:1.6;}
+
+    /* Type bois */
+    .type-selector{display:flex;gap:8px;margin-bottom:8px;}
+    .type-btn{flex:1;padding:10px;border:2px solid #ccc;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:#555;transition:all .2s;text-align:center;}
+    .type-btn.active{border-color:#6aaa3a;background:#f0f7e8;color:#2d4a1e;}
+
+    /* Section */
+    .section-mode{display:flex;gap:8px;margin-bottom:8px;}
+    .sec-mode-btn{flex:1;padding:8px;border:1px solid #ccc;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#666;text-align:center;}
+    .sec-mode-btn.active{border-color:#6aaa3a;background:#f0f7e8;color:#2d4a1e;border-width:2px;}
+
+    .btn{width:100%;padding:13px;background:#6aaa3a;color:#fff;border:none;border-radius:4px;font-size:16px;font-weight:700;cursor:pointer;margin:12px 0 0;}
+    .btn:hover{background:#558c2e;}
+
+    /* Résultats */
+    .results-wrap{background:#f5faf0;border:1px solid #c8e0b0;border-radius:6px;padding:1.25rem;margin-top:12px;}
+    .mention-ind{display:inline-block;background:#fff3cd;border:1px solid #ffc107;color:#856404;border-radius:4px;font-size:11px;font-weight:600;padding:3px 8px;margin-bottom:10px;}
+    .box-conseil{background:#e8f4e0;border:1px solid #a8d888;border-radius:6px;padding:0.9rem;margin-bottom:1rem;}
+    .profil-opt{font-size:14px;font-weight:700;color:#2d4a1e;margin-bottom:3px;}
+    .profil-opt span{color:#c0392b;font-size:16px;}
+    .italic{font-size:11px;color:#666;font-style:italic;}
+    .analyse-title{font-size:15px;font-weight:700;color:#2d4a1e;margin:0.8rem 0 4px;}
+    .charge-info{font-size:11px;color:#555;margin-bottom:0.8rem;padding-bottom:0.65rem;border-bottom:1px solid #d0e8c0;line-height:1.8;}
+    table{width:100%;border-collapse:collapse;margin-bottom:0.8rem;}
+    th{background:#2d4a1e;color:#fff;padding:8px 10px;text-align:left;font-size:11px;}
+    td{padding:8px 10px;font-size:11px;border-bottom:1px solid #dde8d5;color:#333;vertical-align:middle;}
+    td:first-child{font-weight:600;}
+    .ok{color:#1e8449;font-weight:700;}
+    .nok{color:#c0392b;font-weight:700;}
+    .taux-wrap{display:flex;align-items:center;gap:6px;}
+    .taux-bar-bg{background:#e0e8d8;border-radius:3px;height:8px;width:80px;overflow:hidden;flex-shrink:0;}
+    .taux-bar-fill{height:100%;border-radius:3px;background:#6aaa3a;transition:width .3s;}
+    .taux-bar-fill.warn{background:#e67e22;}
+    .taux-bar-fill.danger{background:#c0392b;}
+    .sep{border:none;border-top:1px solid #d0e8c0;margin:8px 0;}
+    .footer-res{font-size:11px;color:#333;line-height:1.9;}
+
+    /* Schéma SVG */
+    .schema-wrap{background:#f8f8f8;border:1px solid #e0e8d8;border-radius:6px;padding:10px;margin-bottom:10px;text-align:center;}
+    .schema-wrap svg{max-width:100%;height:auto;}
+
+    /* Splash / CGU */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.62);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal-box{background:#fff;border-radius:10px;padding:1.75rem;max-width:480px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,0.25);text-align:center;}
+    .modal-box .modal-icon{font-size:38px;margin-bottom:10px;}
+    .modal-box h2{font-size:16px;font-weight:700;color:#c0392b;margin-bottom:12px;line-height:1.4;}
+    .modal-box p{font-size:13px;color:#333;line-height:1.7;margin-bottom:18px;}
+    .modal-box .btn-accept{background:#6aaa3a;color:#fff;border:none;border-radius:6px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+    .cgu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.62);z-index:1100;display:none;align-items:center;justify-content:center;padding:16px;}
+    .cgu-overlay.open{display:flex;}
+    .cgu-box{background:#fff;border-radius:10px;padding:1.75rem;max-width:660px;width:100%;max-height:88vh;overflow-y:auto;}
+    .cgu-box h2{font-size:15px;font-weight:700;color:#2d4a1e;border-bottom:2px solid #6aaa3a;padding-bottom:6px;margin-bottom:12px;}
+    .cgu-box h3{font-size:12px;font-weight:700;color:#2d4a1e;margin:12px 0 4px;}
+    .cgu-box p{font-size:12px;color:#333;line-height:1.75;margin-bottom:6px;}
+    .cgu-box .btn-close-cgu{background:#2d4a1e;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;width:100%;}
+
+    @media(max-width:600px){
+      .grid2,.grid3{grid-template-columns:1fr;}
+      .calc-type-bar{flex-wrap:wrap;}
+      .type-selector{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="modal-overlay" id="splashModal">
+  <div class="modal-box">
+    <div class="modal-icon">🪵</div>
+    <h2>Outil d'esquisse uniquement</h2>
+    <p>Cet outil est destiné exclusivement au <strong>pré-dimensionnement en phase d'esquisse</strong> (EC5).<br><br>
+    <strong>Les résultats doivent être validés par un bureau d'études structure.</strong><br><br>
+    En utilisant cet outil, vous acceptez les <a href="#" onclick="openCGU(event)" style="color:#2d4a1e;font-weight:700;">Mentions légales et CGU</a>.</p>
+    <button class="btn-accept" onclick="closeSplash()">J'accepte et je comprends</button>
+  </div>
+</div>
+
+<!-- CGU -->
+<div class="cgu-overlay" id="cguModal">
+  <div class="cgu-box">
+    <h2>📋 Mentions légales — Limitation de responsabilité et usage (EC5)</h2>
+    <h3>1. Nature de l'outil</h3>
+    <p>Outil de pré-dimensionnement en phase d'esquisse uniquement. Ne constitue pas un logiciel certifié pour l'exécution d'ouvrages.</p>
+    <h3>2. Absence de garantie</h3>
+    <p>Fourni "en l'état". Les résultats sont des approximations basées sur les paramètres saisis. L'Éditeur ne garantit pas l'absence d'erreurs.</p>
+    <h3>3. Exclusion de responsabilité</h3>
+    <p>L'Éditeur décline toute responsabilité concernant les conséquences liées à l'utilisation des résultats générés.</p>
+    <h3>4. Obligation de validation</h3>
+    <p>Tout dimensionnement doit être validé par un Bureau d'Études Structure (BET) qualifié, conformément aux Eurocodes EC5 en vigueur.</p>
+    <button class="btn-close-cgu" onclick="closeCGU()">Fermer</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="app-icon">🪵</div>
+      <div class="app-titles">
+        <h1 id="t-h1">Calculateur Bois — EC5</h1>
+        <div class="subtitle" id="t-subtitle">Panne &amp; Chevron — Bois Massif / Lamellé Collé</div>
+      </div>
+    </div>
+    <button class="btn-lang" id="btn-lang" onclick="toggleLang()">🇬🇧 EN</button>
+    <button class="btn-about" onclick="openCGU(event)">ℹ️ <span id="t-cgu">CGU</span></button>
+  </div>
+
+  <!-- TYPE DE CALCUL -->
+  <div class="calc-type-bar">
+    <button class="calc-type-btn active" id="btn-panne" onclick="selectCalc('panne')">
+      🏗️ <span id="t-panne">Panne d'aplomb</span>
+    </button>
+    <button class="calc-type-btn" id="btn-panne-dev" onclick="selectCalc('panne-dev')">
+      📐 <span id="t-panne-dev">Panne déversée</span>
+    </button>
+    <button class="calc-type-btn" id="btn-chevron" onclick="selectCalc('chevron')">
+      🔨 <span id="t-chevron">Chevron</span>
+    </button>
+  </div>
+
+  <!-- SCHÉMA -->
+  <div class="schema-wrap" id="schema-zone"></div>
+
+  <!-- TYPE BOIS -->
+  <h2 id="t-materiau">Matériau</h2>
+  <div class="type-selector">
+    <button class="type-btn active" id="btn-bm" onclick="selectType('BM')">🌲 <span id="t-bm">Bois Massif</span><br><small style="font-size:10px;font-weight:400;" id="t-bm-sub">inclut BMR / DUO-TRIO (h max 240 mm)</small></button>
+    <button class="type-btn" id="btn-lc" onclick="selectType('LC')">🔩 <span id="t-lc">Lamellé Collé GL24h</span></button>
+  </div>
+  <div class="type-selector" id="zone-classe-bm" style="margin-top:8px;">
+    <button class="type-btn active" id="btn-c24" onclick="selectClasseBM('C24')" style="padding:8px;font-size:13px;">C24</button>
+    <button class="type-btn" id="btn-c18" onclick="selectClasseBM('C18')" style="padding:8px;font-size:13px;">C18</button>
+  </div>
+
+  <h2 id="t-geometrie">Géométrie</h2>
+  <div class="grid3">
+    <div class="fg">
+      <label id="t-portee">Portée (m) :</label>
+      <input type="number" id="longueur" value="4" step="0.1" min="0.5" oninput="drawSchema()">
+    </div>
+    <div class="fg">
+      <label id="t-entraxe">Entraxe — bande chargement (m) :</label>
+      <input type="number" id="entraxe" value="1" step="0.1" min="0.1" oninput="drawSchema()">
+    </div>
+    <div class="fg">
+      <label id="t-pente">Pente du toit (%) :</label>
+      <input type="number" id="pente_pct" value="57.74" step="1" min="0" max="200" oninput="afficherPente()">
+      <span class="hint" id="hint-deg">= 30.0°</span>
+    </div>
+  </div>
+  <div class="pente-info" id="pente-info">📐 Pente : 57.74% (30.0°)</div>
+
+  <div id="zone-overhang">
+    <div class="grid3" style="margin-top:8px;">
+      <div class="fg">
+        <label id="t-a1">Débord gauche (m) :</label>
+        <input type="number" id="overhang_a1" value="0" step="0.1" min="0" oninput="updateOverhangUI()">
+      </div>
+      <div class="fg">
+        <label id="t-a2">Débord droit (m) :</label>
+        <input type="number" id="overhang_a2" value="0" step="0.1" min="0" oninput="updateOverhangUI()">
+      </div>
+      <div class="fg" id="zone-qepos" style="display:none;">
+        <label id="t-qepos">Position de Qe :</label>
+        <select id="overhang_qepos" onchange="updateOverhangUI()">
+          <option value="mid">Milieu de la portée</option>
+          <option value="tip">Bout du débord le plus long</option>
+        </select>
+      </div>
+      <div class="fg" id="zone-lat" style="display:none;">
+        <label id="t-lat">Appui latéral en bout de débord :</label>
+        <select id="overhang_lat" onchange="updateOverhangUI()">
+          <option value="oui">Oui (axe faible maintenu)</option>
+          <option value="non">Non</option>
+        </select>
+      </div>
+    </div>
+    <div class="hint" id="hint-overhang">0 = pas de porte-à-faux. G et S identiques sur les débords (panne et panne déversée).</div>
+  </div>
+
+  <!-- CHARGES -->
+  <h2 id="t-charges">Charges</h2>
+  <div class="grid3">
+    <div class="fg">
+      <label id="t-g-label">Charge permanente G — rampant (kg/m²) :</label>
+      <input type="number" id="g_rampant" value="100" step="5" min="0">
+      <span class="hint" id="hint-g">Couverture + isolant (PP auto)</span>
+    </div>
+    <div class="fg">
+      <label id="t-neige-label">Neige :</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="neige_mode" onchange="toggleNeigeMode()" style="width:auto;flex:0 0 auto;font-size:13px;padding:8px 8px;">
+          <option value="manuel" id="t-opt-manuel">Manuel</option>
+          <option value="auto" id="t-opt-auto">Zone + Altitude</option>
+        </select>
+      </div>
+      <!-- Mode manuel -->
+      <div id="zone-neige-manuel">
+        <input type="number" id="sk" value="55" step="5" min="0" oninput="updateSkDisplay()">
+        <span class="hint" id="t-sk-hint">sk au sol (kg/m²) avant correction pente</span>
+      </div>
+      <!-- Mode auto -->
+      <div id="zone-neige-auto" style="display:none;">
+        <div style="display:flex;gap:6px;margin-bottom:4px;">
+          <select id="zone_neige" onchange="calcSkAuto()" style="flex:1;font-size:13px;">
+            <option value="A1">A1 — sk0=45 kg/m²</option>
+            <option value="A2">A2 — sk0=45 kg/m²</option>
+            <option value="B1" selected>B1 — sk0=55 kg/m²</option>
+            <option value="B2">B2 — sk0=55 kg/m²</option>
+            <option value="C1">C1 — sk0=65 kg/m²</option>
+            <option value="C2">C2 — sk0=65 kg/m²</option>
+            <option value="D">D — sk0=90 kg/m²</option>
+            <option value="E" id="t-opt-corse">E (Corse) — sk0=100 kg/m²</option>
+          </select>
+          <input type="number" id="altitude" value="200" step="50" min="0" max="3000" oninput="calcSkAuto()" style="width:90px;font-size:13px;" placeholder="Alt. (m)">
+        </div>
+        <div class="pente-info" id="sk-auto-result" style="margin-top:0;font-size:12px;">sk = 55 kg/m²</div>
+      </div>
+    </div>
+    <div class="fg">
+      <label id="t-qe-label">Charge d'entretien Qe (kg) :</label>
+      <input type="number" id="qe" value="150" step="10" min="0">
+      <span class="hint" id="t-qe-hint">Force ponctuelle au milieu (0 si aucune)</span>
+    </div>
+  </div>
+
+  <h2 id="t-section">Section</h2>
+
+  <!-- BM C24 : saisie b × h libre -->
+  <div id="zone-bm">
+    <div class="grid2">
+      <div class="fg">
+        <label>Largeur b (mm) :</label>
+        <input type="number" id="b_libre" value="80" step="1" min="20">
+      </div>
+      <div class="fg">
+        <label>Hauteur h (mm) :</label>
+        <input type="number" id="h_libre" value="160" step="1" min="50">
+        <span class="hint">L'optimisation proposera la h minimale pour cette largeur</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LC GL24h : catalogue OU saisie libre -->
+  <div id="zone-lc" style="display:none;">
+    <div class="section-mode">
+      <button class="sec-mode-btn active" id="btn-catalogue" onclick="selectSecMode('catalogue')">📋 Catalogue</button>
+      <button class="sec-mode-btn" id="btn-libre-lc" onclick="selectSecMode('libre')">✏️ Saisie libre b × h</button>
+    </div>
+    <div id="zone-catalogue">
+      <div class="fg">
+        <label id="label-section">Section LC à tester :</label>
+        <select id="section_select"></select>
+      </div>
+    </div>
+    <div id="zone-libre-lc" style="display:none;">
+      <div class="grid2">
+        <div class="fg">
+          <label>Largeur b (mm) :</label>
+          <input type="number" id="b_libre_lc" value="100" step="1" min="20">
+        </div>
+        <div class="fg">
+          <label>Hauteur h (mm) :</label>
+          <input type="number" id="h_libre_lc" value="240" step="1" min="50">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:8px;" id="zone-fleche-limite">
+    <div class="fg">
+      <label>Flèche limite instantanée (Qe ou S) :</label>
+      <select id="limite_fleche">
+        <option value="300" selected>L / 300 (Standard EC5)</option>
+        <option value="400">L / 400 (Renforcé)</option>
+        <option value="500">L / 500 (Sensible)</option>
+      </select>
+      <span class="hint" id="hint-fleche">Pour pannes — chevrons : L/150 fixe EC5 toiture</span>
+    </div>
+  </div>
+
+  <button class="btn" id="btn-calc" onclick="calculer()">🪵 Lancer le calcul EC5 &amp; Optimiser</button>
+  <div id="zone_resultat"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// BASE DE DONNÉES
+// ══════════════════════════════════════════════
+// ── Génération automatique des sections LC / BMR ──
+function genLC() {
+  const largeurs = [80,100,120,140,160,180,200,240];
+  const bdd = {};
+  for (const b of largeurs)
+    for (let h = 120; h <= 800; h += 40)
+      bdd[`${b}×${h}`] = {b, h};
+  return bdd;
+}
+function genBMR() {
+  // BMR (DUO/TRIO) : mêmes largeurs, hauteur max 240 mm
+  const largeurs = [80,100,120,140,160,180,200,240];
+  const bdd = {};
+  for (const b of largeurs)
+    for (let h = 120; h <= 240; h += 40)
+      bdd[`${b}×${h}`] = {b, h};
+  return bdd;
+}
+
+const bddBM = {
+  "45×95":{b:45,h:95},"45×120":{b:45,h:120},"45×145":{b:45,h:145},
+  "45×170":{b:45,h:170},"45×195":{b:45,h:195},"45×220":{b:45,h:220},
+  "63×100":{b:63,h:100},"63×125":{b:63,h:125},"63×150":{b:63,h:150},
+  "63×175":{b:63,h:175},"63×200":{b:63,h:200},"63×225":{b:63,h:225},
+  "75×100":{b:75,h:100},"75×125":{b:75,h:125},"75×150":{b:75,h:150},
+  "75×175":{b:75,h:175},"75×200":{b:75,h:200},"75×225":{b:75,h:225},
+  "75×250":{b:75,h:250},
+  "100×150":{b:100,h:150},"100×175":{b:100,h:175},"100×200":{b:100,h:200},
+  "100×225":{b:100,h:225},"100×250":{b:100,h:250},"100×300":{b:100,h:300},
+};
+const bddLC  = genLC();
+const bddBMR = genBMR();
+
+const propBM  = {Gmean:690,E0:11000,E05:7400, G05:460,fm_k:24,fc0_k:21,fv_k:4.0,fc90_k:2.5,gamma_M:1.3, kdef:0.8,densite:420,label:"Bois Massif C24"};
+const propBM18= {Gmean:560,E0:9000, E05:6000, G05:370,fm_k:18,fc0_k:18,fv_k:3.4,fc90_k:2.2,gamma_M:1.3, kdef:0.8,densite:380,label:"Bois Massif C18"};
+const propLC  = {Gmean:650,E0:11500,E05:9400, G05:590,fm_k:26.4,fc0_k:24,fv_k:3.5,fc90_k:2.7,gamma_M:1.25,kdef:0.8,densite:420,label:"Lamellé Collé GL24h"};
+const propBMR = {Gmean:690,E0:11000,E05:7400, G05:460,fm_k:24,fv_k:4.0,fc90_k:2.5,gamma_M:1.3, kdef:0.8,densite:420,label:"BMR / DUO-TRIO C24"};
+let classeBM = 'C24';
+function getPropsBM() { return classeBM === 'C18' ? propBM18 : propBM; }
+function selectClasseBM(c) {
+  classeBM = c;
+  document.getElementById('btn-c24').classList.toggle('active', c==='C24');
+  document.getElementById('btn-c18').classList.toggle('active', c==='C18');
+  document.getElementById('zone_resultat').innerHTML = '';
+}
+
+let typeActif = 'BM';
+let secMode   = 'catalogue';
+
+let calcActif = 'panne';
+
+// Schémas SVG
+
+
+function getOverhang() {
+  if (calcActif === 'chevron') return {a1:0, a2:0, qepos:'mid', lat:false};
+  return {
+    lat: document.getElementById('overhang_lat').value === 'oui',
+    a1: Math.max(0, parseFloat(document.getElementById('overhang_a1').value)||0),
+    a2: Math.max(0, parseFloat(document.getElementById('overhang_a2').value)||0),
+    qepos: document.getElementById('overhang_qepos').value
+  };
+}
+
+function drawSchema() {
+  const el = document.getElementById('schema-zone'); if (!el) return;
+  const num = (id, d) => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? d : v; };
+  const L = num('longueur', 4), e = num('entraxe', 1), pct = num('pente_pct', 0);
+  const al = Math.atan(pct / 100), deg = al * 180 / Math.PI;
+  const o = getOverhang(), a1 = o.a1, a2 = o.a2, tot = L + a1 + a2;
+  const t = (typeof calcActif !== 'undefined') ? calcActif : 'panne';
+  if (!(L > 0)) { el.innerHTML = ''; return; }
+  const f = v => (Math.round(v * 100) / 100).toString().replace('.', ',');
+  const nom = t === 'chevron' ? 'Chevron' : t === 'panne-dev' ? 'Panne déversée' : "Panne d'aplomb";
+  const mem = t === 'chevron' ? 'chevron' : 'panne';
+  // Vue en plan (dans le plan du rampant)
+  const PW = 270, m = 18, sc = (PW - 2 * m) / tot;
+  const yc = 100, sp = Math.max(44, Math.min(72, e * sc)), by = yc - sp / 2, bh = sp;
+  const x0 = m, xA = m + a1 * sc, xB = xA + L * sc, x1 = m + tot * sc;
+  const ov = a1 > 0 || a2 > 0;
+  const bar = x => `<rect x="${x - 3}" y="8" width="6" height="${2 * yc - 16}" fill="#efe3c8" stroke="#8d6e63" stroke-width="1"/>`;
+  const dimH = (xa, xb, y, txt) => `<g stroke="currentColor" stroke-width="1" fill="none"><line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}"/><line x1="${xa}" y1="${y - 4}" x2="${xa}" y2="${y + 4}"/><line x1="${xb}" y1="${y - 4}" x2="${xb}" y2="${y + 4}"/></g><text x="${(xa + xb) / 2}" y="${y + 13}" text-anchor="middle" font-size="11" fill="currentColor">${txt}</text>`;
+  const dy = 2 * yc - 6;
+  // bande de chargement = moitié de l'entraxe de chaque côté de la panne étudiée
+  let plan = `<rect x="${x0}" y="${by}" width="${x1 - x0}" height="${bh}" fill="#ef9a9a" fill-opacity="${ov ? .3 : .55}"/>`;
+  plan += `<rect x="${xA - 3}" y="${by}" width="${xB - xA + 6}" height="${bh}" fill="#ef9a9a" fill-opacity=".55"/>`;
+  plan += bar(xA) + bar(xB);
+  // pannes voisines (grisées) et panne étudiée
+  [-sp, sp].forEach(d => { plan += `<rect x="${x0}" y="${yc + d - 3}" width="${x1 - x0}" height="6" fill="#e6d5b8" stroke="#8d6e63" stroke-dasharray="4 2"/>`; });
+  plan += `<rect x="${x0}" y="${yc - 4}" width="${x1 - x0}" height="8" fill="#c8a165" stroke="#5d4037"/>`;
+  plan += `<text x="${(xA + xB) / 2}" y="${yc - 8}" text-anchor="middle" font-size="11" fill="currentColor" stroke="#f8f8f8" stroke-width="3" paint-order="stroke">${mem} étudiée</text>`;
+  plan += `<text x="${(xA + xB) / 2}" y="${yc - sp - 6}" text-anchor="middle" font-size="10" fill="#777">${mem} voisine</text>`;
+  plan += `<text x="${(xA + xB) / 2}" y="${yc + sp + 15}" text-anchor="middle" font-size="10" fill="#777">${mem} voisine</text>`;
+  plan += dimH(xA, xB, dy, 'L = ' + f(L) + ' m');
+  if (a1 > 0) plan += dimH(x0, xA, dy, f(a1) + ' m');
+  if (a2 > 0) plan += dimH(xB, x1, dy, f(a2) + ' m');
+  const exx = x1 + 8;
+  const vd = (ya, yb) => `<g stroke="currentColor" stroke-width="1" fill="none"><line x1="${exx}" y1="${ya}" x2="${exx}" y2="${yb}"/><line x1="${exx - 4}" y1="${ya}" x2="${exx + 4}" y2="${ya}"/><line x1="${exx - 4}" y1="${yb}" x2="${exx + 4}" y2="${yb}"/></g>`;
+  plan += vd(by, by + bh) + `<text x="${exx + 5}" y="${yc + 4}" font-size="11" fill="currentColor">e = ${f(e)} m</text>`;
+  // Profil (angle de toiture)
+  const ox = PW + 58, oy = 150, R = 80;
+  const a = Math.min(Math.max(al, 0), 1.4);
+  const px = ox + R * Math.cos(a), py = oy - R * Math.sin(a);
+  const cx = ox + R * .55 * Math.cos(a), cy = oy - R * .55 * Math.sin(a);
+  const hw = 7, hh = 14, ang = t === 'panne-dev' ? -a : 0;
+  const sec = t === 'chevron'
+    ? `<g transform="translate(${ox},${oy}) rotate(${-a * 180 / Math.PI})"><rect x="0" y="-10" width="${R}" height="8" fill="#c8a165" stroke="#5d4037"/><text x="${R / 2}" y="-14" text-anchor="middle" font-size="10" fill="currentColor">chevron</text></g>`
+    : `<g transform="translate(${cx},${cy}) rotate(${ang * 180 / Math.PI})"><rect x="${-hw / 2}" y="${-hh}" width="${hw}" height="${hh}" fill="#c8a165" stroke="#5d4037"/></g>`;
+  const r = 34, arcx = ox + r * Math.cos(a), arcy = oy - r * Math.sin(a);
+  const prof = `<line x1="${ox - 6}" y1="${oy}" x2="${ox + R + 12}" y2="${oy}" stroke="currentColor" stroke-dasharray="3 3"/>
+    <line x1="${ox}" y1="${oy}" x2="${px}" y2="${py}" stroke="#555" stroke-width="3"/>
+    ${sec}
+    <path d="M ${ox + r} ${oy} A ${r} ${r} 0 0 0 ${arcx} ${arcy}" fill="none" stroke="currentColor"/>
+    <text x="${ox + r + 6}" y="${oy - 6}" font-size="11" fill="currentColor">α = ${f(Math.round(deg * 10) / 10)}°</text>
+    <text x="${ox - 6}" y="${oy + 18}" font-size="10" fill="currentColor">pente ${pct}%</text>`;
+  // Vue en élévation : poutre sur 2 appuis, charge répartie, portée et débords
+  const EW = 360, em = 24, es = (EW - 2 * em) / tot, ey = 38;
+  const ex0 = em, exA = em + a1 * es, exB = exA + L * es, ex1 = em + tot * es;
+  const tri = x => `<polygon points="${x},${ey + 6} ${x - 9},${ey + 22} ${x + 9},${ey + 22}" fill="#c62828"/>`;
+  let arrows = ''; const na = Math.max(6, Math.round(tot * es / 14));
+  for (let i = 0; i <= na; i++) { const x = ex0 + (ex1 - ex0) * i / na; arrows += `<line x1="${x}" y1="${ey - 22}" x2="${x}" y2="${ey - 4}" stroke="#1565c0"/><polygon points="${x - 3},${ey - 8} ${x + 3},${ey - 8} ${x},${ey - 3}" fill="#1565c0"/>`; }
+  let edim = dimH(exA, exB, ey + 36, 'L = ' + f(L) + ' m');
+  if (a1 > 0) edim += dimH(ex0, exA, ey + 36, f(a1) + ' m');
+  if (a2 > 0) edim += dimH(exB, ex1, ey + 36, f(a2) + ' m');
+  const elev = `<svg viewBox="0 0 ${EW} 90" style="width:100%;max-width:420px;color:#333;margin-top:6px;" role="img" aria-label="Schéma de la portée">
+    <line x1="${ex0}" y1="${ey - 22}" x2="${ex1}" y2="${ey - 22}" stroke="#1565c0"/>${arrows}
+    <rect x="${ex0}" y="${ey - 4}" width="${ex1 - ex0}" height="8" fill="#c8a165" stroke="#5d4037"/>
+    ${tri(exA)}${tri(exB)}${edim}</svg>`;
+  el.innerHTML = `<svg viewBox="0 0 ${PW + 185} 214" style="width:100%;max-width:520px;color:#333;" role="img" aria-label="Schéma ${nom}">
+    <text x="4" y="10" font-size="11" font-weight="bold" fill="currentColor">${nom}</text>
+    ${plan}${prof}</svg>` + elev;
+}
+
+function updateOverhangUI() {
+  const o = getOverhang();
+  document.getElementById('zone-qepos').style.display = (o.a1>0 || o.a2>0) ? '' : 'none';
+  document.getElementById('zone-lat').style.display = ((o.a1>0 || o.a2>0) && calcActif==='panne-dev') ? '' : 'none';
+  document.getElementById('zone_resultat').innerHTML = '';
+  drawSchema();
+}
+
+function selectCalc(t) {
+  setTimeout(drawSchema,0);
+  calcActif = t;
+  document.getElementById('zone-overhang').style.display = (t!=='chevron') ? '' : 'none';
+  document.getElementById('btn-panne')    .classList.toggle('active', t==='panne');
+  document.getElementById('btn-panne-dev').classList.toggle('active', t==='panne-dev');
+  document.getElementById('btn-chevron')  .classList.toggle('active', t==='chevron');
+  drawSchema();
+  document.getElementById('hint-g').textContent = t==='chevron'
+    ? 'Couverture + isolant (PP chevron auto)'
+    : 'Couverture + isolant (PP auto)';
+  const zoneFleche = document.getElementById('zone-fleche-limite');
+  const hintFleche = document.getElementById('hint-fleche');
+  if (t === 'chevron') {
+    zoneFleche.style.opacity = '0.4';
+    zoneFleche.style.pointerEvents = 'none';
+    hintFleche.textContent = '⚠️ Chevrons : L/150 fixe (EC5 toiture) — sélecteur désactivé';
+    hintFleche.style.color = '#e67e22';
+  } else {
+    zoneFleche.style.opacity = '1';
+    zoneFleche.style.pointerEvents = '';
+    hintFleche.textContent = t==='panne-dev'
+      ? '📐 Panne déversée : flèches w (⊥ rampant) et v (horiz.) vérifiées séparément'
+      : 'Pour pannes — chevrons : L/150 fixe EC5 toiture';
+    hintFleche.style.color = t==='panne-dev' ? '#1a5276' : '';
+  }
+  document.getElementById('zone_resultat').innerHTML = '';
+}
+
+function selectType(t) {
+  typeActif = t;
+  document.getElementById('btn-bm').classList.toggle('active', t==='BM');
+  document.getElementById('btn-lc').classList.toggle('active', t==='LC');
+  // Afficher la zone section adaptée
+  document.getElementById('zone-bm').style.display = t==='BM' ? '' : 'none';
+  document.getElementById('zone-classe-bm').style.display = t==='BM' ? '' : 'none';
+  document.getElementById('zone-lc').style.display = t==='LC' ? '' : 'none';
+  if (t==='LC') peuplerSections();
+  document.getElementById('zone_resultat').innerHTML = '';
+}
+
+function selectSecMode(m) {
+  secMode = m;
+  // boutons
+  const btnCat   = document.getElementById('btn-catalogue');
+  const btnLibre = document.getElementById('btn-libre-lc') || document.getElementById('btn-libre');
+  if (btnCat)   btnCat.classList.toggle('active', m==='catalogue');
+  if (btnLibre) btnLibre.classList.toggle('active', m==='libre');
+  // zones
+  const zoneCat   = document.getElementById('zone-catalogue');
+  const zoneLibre = document.getElementById('zone-libre-lc') || document.getElementById('zone-libre');
+  if (zoneCat)   zoneCat.style.display   = m==='catalogue' ? '' : 'none';
+  if (zoneLibre) zoneLibre.style.display = m==='libre'     ? '' : 'none';
+}
+
+function peuplerSections() {
+  const sel = document.getElementById('section_select');
+  sel.innerHTML = '';
+  const bdd = typeActif==='BM' ? bddBM : bddLC;
+  const defVal = typeActif==='BM' ? '63×200' : '160×240';
+  Object.keys(bdd).forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.text = n + ' mm';
+    sel.appendChild(o);
+  });
+  if (bdd[defVal]) sel.value = defVal;
+}
+
+function pct2deg(p){ return Math.atan(p/100)*180/Math.PI; }
+
+function afficherPente() {
+  setTimeout(drawSchema,0);
+  const pct = parseFloat(document.getElementById('pente_pct').value)||0;
+  const deg = pct2deg(pct);
+  document.getElementById('hint-deg').textContent = '= '+deg.toFixed(1)+'°';
+  const coeff = Math.cos(deg*Math.PI/180).toFixed(3);
+  document.getElementById('pente-info').textContent =
+    `📐 Pente : ${pct}% (${deg.toFixed(1)}°) — cos(α) = ${coeff} — Facteur neige sur horizontal`;
+}
+
+// ══════════════════════════════════════════════
+// MOTEUR DE CALCUL EC5
+// ══════════════════════════════════════════════
+// Poutre sur 2 appuis A(x=0) et B(x=L) avec débords a1 (gauche) et a2 (droit).
+// Charge répartie w (kN/m) sur toute la longueur + charge ponctuelle P (kN) à l'abscisse xp (depuis A).
+// EI en N·m². Flèches en mm, positives vers le bas.
+function beamOverhang(a1, a2, L, w, P, xp, EI) {
+  const R_B = w * ((L + a2)**2 - a1**2) / (2*L) + P * xp / L;
+  const R_A = w * (a1 + L + a2) + P - R_B;
+  const Mat = x => R_A*Math.max(x,0) + R_B*Math.max(x-L,0) - w*(x+a1)**2/2 - P*Math.max(x-xp,0);
+  const Vat = x => R_A*(x>0?1:0) + R_B*(x>L?1:0) - w*(x+a1) - P*(x>xp?1:0);
+  const N = 800, x0 = -a1, dx = (L + a1 + a2) / N;
+  let Mabs = 0;
+  const kappa = [];
+  for (let i=0;i<=N;i++) { const M = Mat(x0 + i*dx); Mabs = Math.max(Mabs, Math.abs(M)); kappa.push(M*1000/EI); }
+  Mabs = Math.max(Mabs, Math.abs(Mat(0)), Math.abs(Mat(L)), Math.abs(Mat(xp)));
+  const e = 1e-9;
+  const Vabs = Math.max(Math.abs(Vat(-e)), Math.abs(Vat(e)), Math.abs(Vat(L-e)), Math.abs(Vat(L+e)));
+  let v = {mid:0, tip1:0, tip2:0};
+  if (EI > 0) {
+    const Th=[0], D=[0];
+    for (let i=1;i<=N;i++) Th.push(Th[i-1] + dx*(kappa[i-1]+kappa[i])/2);
+    for (let i=1;i<=N;i++) D.push(D[i-1] + dx*(Th[i-1]+Th[i])/2);
+    const iA = Math.round(a1/dx), iB = Math.round((a1+L)/dx);
+    const th0 = -(D[iB]-D[iA])/L, v0 = -D[iA] - th0*a1;
+    const vs = i => D[i] + th0*(i*dx) + v0;
+    v = { mid: -vs(Math.round((a1+L/2)/dx))*1000, tip1: -vs(0)*1000, tip2: -vs(N)*1000 };
+  }
+  return {R_A, R_B, Mabs, Vabs, v_mid:v.mid, v_tip1:v.tip1, v_tip2:v.tip2};
+}
+
+function calcEC5(sec_mm, props, L, G_lin, S_lin, Qe, limDiv, a1=0, a2=0, qepos='mid') {
+  const ov = (a1 > 0 || a2 > 0);
+  const Ltot = L + a1 + a2;
+  const b = sec_mm.b; // mm
+  const h = sec_mm.h; // mm
+  const b_m = b/1000, h_m = h/1000;
+
+  // Section
+  const A_mm2 = b * h;
+  const Iy_mm4 = b * h**3 / 12;  // axe fort
+  const Iz_mm4 = h * b**3 / 12;  // axe faible (déversement)
+  const Wely_mm3 = b * h**2 / 6;
+  const mass = b_m * h_m * Ltot * props.densite; // kg
+
+  const E_Pa = props.E0 * 1e6;
+  const EI_Nm2 = E_Pa * (Iy_mm4 * 1e-12);
+  const xpQe = qepos==='tip' ? (a2 >= a1 ? L + a2 : -a1) : L/2;
+
+  // ── Charges linéaires (kN/m) ──
+  const pp = b_m * h_m * props.densite * 9.81 / 1000; // kN/m poids propre panne
+  const G_total = G_lin + pp;  // G surfacique + PP
+
+  // ── COMBINAISONS ELU ──
+  // Dominante résistance: 1.35G + 1.5max(S,Qe)
+  const G_elu  = 1.35 * G_total;
+  const S_elu  = 1.5  * S_lin;
+  const Qe_elu = 1.5  * Qe;
+
+  // Moments au milieu
+  const M_G  = G_elu  * L*L / 8;   // kNm (réparti)
+  const M_S  = S_elu  * L*L / 8;   // kNm (réparti)
+  const M_Qe = Qe_elu * L / 4;     // kNm (ponctuel milieu)
+
+  let M_GS  = M_G + M_S;
+  let M_GQe = M_G + M_Qe;
+  let ovGS = null, ovGQe = null;
+  if (ov) {
+    ovGS  = beamOverhang(a1, a2, L, G_elu + S_elu, 0, 0, 0);
+    ovGQe = beamOverhang(a1, a2, L, G_elu, Qe_elu, xpQe, 0);
+    M_GS = ovGS.Mabs; M_GQe = ovGQe.Mabs;
+  }
+  const M_elu = Math.max(M_GS, M_GQe); // combinaison dominante
+
+  // Effort tranchant ELU (combinaison 1.35G seule pour cisaillement)
+  const V_G_elu = 1.35 * G_total * L / 2;   // kN
+  // Effort tranchant combinaison 3 (1.35G+1.5S)
+  const V_GS_elu = G_elu * L/2 + S_elu * L/2;
+  let V_elu = Math.max(V_G_elu, V_GS_elu);
+  if (ov) V_elu = Math.max(ovGS.Vabs, ovGQe.Vabs);
+
+  // kmod selon combinaison dominante
+  const kmod = M_GS >= M_GQe ? 0.9 : 0.9; // S court terme = 0.9, Qe court terme = 0.9
+
+  // ── RÉSISTANCE FLEXION ──
+  const fm_d = kmod * props.fm_k / props.gamma_M;
+  const sigma_m = (M_elu * 1e6) / Wely_mm3; // MPa (kNm → Nmm)
+  const taux_res = sigma_m / fm_d * 100;
+
+  // ── CISAILLEMENT ──
+  const fv_d = kmod * props.fv_k / props.gamma_M;
+  const tau_d = 1.5 * (V_elu * 1000) / A_mm2; // MPa
+  const taux_cis = tau_d / fv_d * 100;
+
+  // ── DÉVERSEMENT EC5 §6.3.3 ──
+  // Itor section rectangulaire
+  const beta_tor = 1/3 * (1 - 0.63 * b/h);
+  const Itor_mm4 = beta_tor * b**3 * h;
+  // σm,crit EC5 (6.31)
+  const sigma_m_crit = Math.PI / (Wely_mm3 * L*1000) * Math.sqrt(props.E05 * Iz_mm4 * props.G05 * Itor_mm4);
+  const lambda_rel = Math.sqrt(props.fm_k / sigma_m_crit);
+
+  let k_crit;
+  if      (lambda_rel <= 0.75) k_crit = 1.0;
+  else if (lambda_rel <= 1.4)  k_crit = 1.56 - 0.75 * lambda_rel;
+  else                          k_crit = 1 / lambda_rel**2;
+
+  const taux_dev = sigma_m / (k_crit * fm_d) * 100;
+
+  // ── FLÈCHES ──
+  // Inst Qe (ponctuel milieu): w = P×L³/(48×E×I)
+  const w_Qe = Qe > 0 ? (Qe * 1000) * (L*1000)**3 / (48 * E_Pa * Iy_mm4 / 1e12 * 1e12) / 1e6 : 0;
+  // Inst G (réparti): w = 5×q×L⁴/(384×E×I)
+  const w_G  = 5 * (G_total * 1000/1000) * (L)**4 / (384 * props.E0 * Iy_mm4/1e12) * 1e3;
+  // Inst S (réparti)
+  const w_S  = S_lin > 0 ? 5 * (S_lin * 1000/1000) * (L)**4 / (384 * props.E0 * Iy_mm4/1e12) * 1e3 : 0;
+
+  // En clair (unités cohérentes):
+  // q [kN/m] = q*1000 [N/m], L [m], E [MPa=N/mm²=10⁶N/m²... → Pa=N/m²]
+  // I [mm⁴] → [m⁴] = I/10¹²
+  // w [m] = 5*q[N/m]*L[m]⁴ / (384*E[Pa]*I[m⁴])
+  // w [mm] = w[m]*1000
+
+  const I_m4 = Iy_mm4 * 1e-12;
+  const E_Pa2 = props.E0 * 1e6;
+  let w_Qe_mm = Qe > 0 ? (Qe * 1e3) * Math.pow(L, 3) / (48 * E_Pa2 * I_m4) * 1e3 : 0;
+  let w_G_mm  = 5 * (G_total) * 1e3 * Math.pow(L, 4) / (384 * E_Pa2 * I_m4) * 1e3;
+  let w_S_mm  = S_lin > 0 ? 5 * S_lin * 1e3 * Math.pow(L, 4) / (384 * E_Pa2 * I_m4) * 1e3 : 0;
+  // Déformation d'effort tranchant (itech : G moyen, section réduite A/1.2)
+  const GAs = props.Gmean * 1e6 * (A_mm2 * 1e-6) / 1.2;
+  w_Qe_mm += Qe > 0 ? (Qe * 1e3) / (4 * GAs) * L * 1e3 : 0;
+  w_G_mm  += G_total * 1e3 * L * L / (8 * GAs) * 1e3;
+  w_S_mm  += S_lin > 0 ? S_lin * 1e3 * L * L / (8 * GAs) * 1e3 : 0;
+  let sG = null, sS = null, sQ = null, ovR = null;
+  if (ov) {
+    const xs = ovGrid(a1, a2, L, [xpQe]), noT = {left:false, right:false};
+    const fG = ovSolve(xs, a1, a2, L, G_total, 0, xpQe, EI_Nm2, GAs, noT);
+    const fS = ovSolve(xs, a1, a2, L, S_lin,   0, xpQe, EI_Nm2, GAs, noT);
+    const fQ = ovSolve(xs, a1, a2, L, 0, Qe,    xpQe, EI_Nm2, GAs, noT);
+    sG = {R_A:fG.R_A, R_B:fG.R_B}; sS = {R_A:fS.R_A, R_B:fS.R_B}; sQ = {R_A:fQ.R_A, R_B:fQ.R_B};
+    const rmax = (arr, lo, hi) => { let m = 0; xs.forEach((x, i) => { if (x >= lo-1e-9 && x <= hi+1e-9) m = Math.max(m, Math.abs(arr[i])); }); return m; };
+    const kd0 = props.kdef;
+    const reg = (lo, hi) => {
+      const g = rmax(fG.v, lo, hi), sv = rmax(fS.v, lo, hi), q = rmax(fQ.v, lo, hi);
+      const fin = Math.max(rmax(fG.v.map((v,i)=>v*(1+kd0)+fS.v[i]), lo, hi), rmax(fG.v.map((v,i)=>v*(1+kd0)+fQ.v[i]), lo, hi));
+      return {g, s:sv, q, fin};
+    };
+    ovR = {mid: reg(0, L), t1: reg(-a1, 0), t2: reg(L, L + a2)};
+    w_G_mm = ovR.mid.g; w_S_mm = ovR.mid.s; w_Qe_mm = ovR.mid.q;
+  }
+
+  // Flèche finale (kdef)
+  const kd = props.kdef;
+  // EC5 §2.2.3: G avec kdef, S sans kdef (ψ2=0 neige), Qe sans kdef (ψ2=0 entretien)
+  const w_fin_GQe = w_G_mm*(1+kd) + w_Qe_mm;
+  const w_fin_GS  = w_G_mm*(1+kd) + w_S_mm;  // S: ψ2=0 → pas de kdef
+  const w_fin = Math.max(w_fin_GQe, w_fin_GS);
+  const w_fin_label = w_fin_GS >= w_fin_GQe ? 'G+S' : 'G+Qe';
+
+  // Limites
+  const fl_lim_inst = L * 1000 / limDiv;   // mm
+  const fl_lim_fin  = L * 1000 / 200;      // mm (L/200)
+
+  // Flèche instantanée dimensionnante
+  const w_inst_dim = Math.max(w_Qe_mm, w_S_mm);
+  const w_inst_label = w_S_mm >= w_Qe_mm ? 'S' : 'Qe';
+
+  const taux_fl_inst = w_inst_dim / fl_lim_inst * 100;
+  const taux_fl_fin  = w_fin / fl_lim_fin * 100;
+
+  // ── RÉACTIONS ──
+  let R_G_v   = G_total * L / 2;
+  let R_S_v   = S_lin   * L / 2;
+  let R_Qe_v  = Qe / 2;
+  if (ov) {
+    R_G_v  = Math.max(sG.R_A, sG.R_B);
+    R_S_v  = Math.max(sS.R_A, sS.R_B);
+    R_Qe_v = Math.max(sQ.R_A, sQ.R_B);
+  }
+  // Flèches de débord (porte-à-faux) : limite sur 2×a (EC5 §7.2)
+  const tips = [];
+  if (ov) {
+    [['gauche', a1, 't1'], ['droit', a2, 't2']].forEach(([cote, a, k]) => {
+      if (a <= 0) return;
+      const r = ovR[k];
+      const w_inst = Math.max(r.s, r.q);
+      const w_fin_t = r.fin;
+      const lim_inst = 2*a*1000/limDiv, lim_fin = 2*a*1000/200;
+      tips.push({cote, a, w_inst, w_fin: w_fin_t, lim_inst, lim_fin,
+                 taux_inst: w_inst/lim_inst*100, taux_fin: w_fin_t/lim_fin*100});
+    });
+  }
+  const alpha_rad = Math.atan(parseFloat(document.getElementById('pente_pct').value||0)/100);
+  const R_G_n   =  R_G_v  * Math.cos(alpha_rad);
+  const R_G_a   = -R_G_v  * Math.sin(alpha_rad);
+  const R_S_n   =  R_S_v  * Math.cos(alpha_rad);
+  const R_S_a   = -R_S_v  * Math.sin(alpha_rad);
+
+  return {
+    mass, pp,
+    Iy_mm4, Iz_mm4, Wely_mm3, Itor_mm4,
+    M_elu, M_GS, M_GQe,
+    fm_d, fv_d, kmod,
+    sigma_m, taux_res,
+    tau_d, taux_cis,
+    sigma_m_crit, lambda_rel, k_crit, taux_dev,
+    w_Qe_mm, w_G_mm, w_S_mm,
+    w_fin, w_fin_label,
+    w_inst_dim, w_inst_label,
+    fl_lim_inst, fl_lim_fin,
+    taux_fl_inst, taux_fl_fin,
+    R_G_v, R_S_v, R_Qe_v, R_G_n, R_G_a, R_S_n, R_S_a,
+    tips, ov,
+    ok_res:  taux_res  <= 100,
+    ok_cis:  taux_cis  <= 100,
+    ok_dev:  taux_dev  <= 100,
+    ok_fi:   taux_fl_inst <= 100 && tips.every(t => t.taux_inst <= 100),
+    ok_ff:   taux_fl_fin  <= 100 && tips.every(t => t.taux_fin  <= 100),
+  };
+}
+
+// ══════════════════════════════════════════════
+// MOTEUR CHEVRON EC5
+// ══════════════════════════════════════════════
+function calcChevronEC5(sec_mm, props, L, G_lin_ramp, S_lin_horiz, Qe, limDiv) {
+  const b = sec_mm.b, h = sec_mm.h;
+  const b_m = b/1000, h_m = h/1000;
+
+  const A_mm2  = b * h;
+  const Iy_mm4 = b * h**3 / 12;
+  const Iz_mm4 = h * b**3 / 12;
+  const Wely   = b * h**2 / 6;
+  const mass   = b_m * h_m * L * props.densite;
+
+  const alpha_rad = Math.atan(parseFloat(document.getElementById('pente_pct').value||0)/100);
+  const cos_a = Math.cos(alpha_rad);
+  const sin_a = Math.sin(alpha_rad);
+
+  // PP du chevron (kN/m de rampant)
+  const pp = b_m * h_m * props.densite * 9.81 / 1000;
+  const G_total = G_lin_ramp + pp;
+
+  // Décomposition des charges (perpendiculaire et parallèle au chevron)
+  const G_perp  = G_total * cos_a;
+  const G_paral = G_total * sin_a;
+  const S_perp  = S_lin_horiz * cos_a;  // S déjà horizontale
+  const S_paral = S_lin_horiz * sin_a;
+  const Qe_perp  = Qe * cos_a;
+  const Qe_paral = Qe * sin_a;
+
+  // ── ELU ──
+  const G_p_elu  = 1.35 * G_perp;
+  const G_a_elu  = 1.35 * G_paral;
+  const Qe_p_elu = 1.5  * Qe_perp;
+  const Qe_a_elu = 1.5  * Qe_paral;
+  const S_p_elu  = 1.5  * S_perp;
+  const S_a_elu  = 1.5  * S_paral;
+
+  // Moments (flexion ⊥ au rampant)
+  const M_G   = G_p_elu  * L*L / 8;
+  const M_Qe  = Qe_p_elu * L / 4;
+  const M_S   = S_p_elu  * L*L / 8;
+  const M_GQe = M_G + M_Qe;
+  const M_GS  = M_G + M_S;
+  const M_elu = Math.max(M_GQe, M_GS);
+  const M_label = M_GS >= M_GQe ? '1.35G+1.5S' : '1.35G+1.5Qe';
+
+  // Effort normal de compression (axe du chevron)
+  const N_G   = G_a_elu  * L / 2;
+  const N_Qe  = Qe_a_elu;           // force ponctuelle → réaction = Qe_paral
+  const N_S   = S_a_elu  * L / 2;
+  const N_GQe = N_G + N_Qe;
+  const N_GS  = N_G + N_S;
+  const N_elu = M_GS >= M_GQe ? N_GS : N_GQe;
+
+  // Cisaillement
+  const V_G_elu  = G_p_elu  * L / 2;
+  const V_S_elu  = S_p_elu  * L / 2;
+  const V_Qe_elu = Qe_p_elu / 2;
+  const V_GS  = V_G_elu + V_S_elu;
+  const V_GQe = V_G_elu + V_Qe_elu;
+  const V_elu = Math.max(V_GS, V_GQe);
+
+  const kmod = 0.9;
+  const kh_y = h < 150 ? Math.min((150/h)**0.2, 1.3) : 1.0;   // effet de hauteur (comme itech)
+  const fm_d  = kmod * props.fm_k * kh_y / props.gamma_M;
+  const fc0_d = kmod * props.fc0_k / props.gamma_M;
+  const fv_d  = kmod * props.fv_k  / props.gamma_M;
+
+  const sigma_m = (M_elu * 1e6) / Wely;    // MPa
+  const sigma_c = (N_elu * 1e3) / A_mm2;   // MPa
+  const tau_d   = 1.5 * (V_elu * 1e3) / A_mm2; // MPa
+
+  // Résistance flexion+compression EC5 §6.2.4 eq 6.19
+  const taux_res = ((sigma_c/fc0_d)**2 + sigma_m/fm_d) * 100;
+  const taux_cis = tau_d / fv_d * 100;
+
+  // ── FLAMBEMENT EC5 §6.3.2 ──
+  const bc = props.densite > 430 ? 0.1 : 0.2; // 0.1 LC, 0.2 BM
+  const iy = h / Math.sqrt(12);  // mm
+  const iz = b / Math.sqrt(12);  // mm
+  const Lef = L * 1000;
+  const lam_y = Lef / iy;
+  const lam_z = Lef / iz;
+  const lam_rel_y = lam_y / Math.PI * Math.sqrt(props.fc0_k / props.E05);
+  const lam_rel_z = lam_z / Math.PI * Math.sqrt(props.fc0_k / props.E05);
+
+  function kc(lr) {
+    if (lr <= 0.3) return 1.0;
+    const k = 0.5*(1 + bc*(lr-0.3) + lr**2);
+    return 1/(k + Math.sqrt(k**2 - lr**2));
+  }
+  const kc_y = kc(lam_rel_y);
+  const kc_z = kc(lam_rel_z);
+  const km = 0.7;
+  // EC5 6.23: σc/(kcy×fc0d) + σm/fmd  (flambement axe fort)
+  // EC5 6.24: σc/(kcz×fc0d) + km×σm/fmd (flambement axe faible)
+  const taux_flamb_y = (sigma_c/(kc_y*fc0_d) + sigma_m/fm_d) * 100;
+  const taux_flamb_z = (sigma_c/(kc_z*fc0_d) + km*sigma_m/fm_d) * 100;
+  const taux_flamb = Math.max(taux_flamb_y, taux_flamb_z);
+  const flamb_label = taux_flamb_y >= taux_flamb_z ? 'axe fort y (6.23)' : 'axe faible z (6.24)';
+
+  // ── DÉVERSEMENT ──
+  const beta_tor = 1/3*(1 - 0.63*b/h);
+  const Itor = beta_tor * b**3 * h;
+  const sigma_crit = Math.PI/(Wely*Lef) * Math.sqrt(props.E05*Iz_mm4*props.G05*Itor);
+  const lambda_rel_m = Math.sqrt(props.fm_k/sigma_crit);
+  let k_crit;
+  if      (lambda_rel_m <= 0.75) k_crit = 1.0;
+  else if (lambda_rel_m <= 1.4)  k_crit = 1.56 - 0.75*lambda_rel_m;
+  else                            k_crit = 1/lambda_rel_m**2;
+  const taux_dev = lambda_rel_m <= 0.75 ? 0 : sigma_m/(k_crit*fm_d)*100;
+
+  // ── FLÈCHES ──
+  const E_Pa = props.E0 * 1e6;
+  const I_m4 = b_m * h_m**3 / 12;
+  let w_Qe = Qe_perp > 0 ? (Qe_perp*1e3)*L**3/(48*E_Pa*I_m4)*1e3 : 0;
+  let w_G  = 5*(G_perp*1e3)*L**4/(384*E_Pa*I_m4)*1e3;
+  let w_S  = S_perp > 0 ? 5*(S_perp*1e3)*L**4/(384*E_Pa*I_m4)*1e3 : 0;
+
+  // Déformation d'effort tranchant (G moyen, section réduite A/1.2)
+  const GAs = props.Gmean * 1e6 * (A_mm2 * 1e-6) / 1.2;
+  w_Qe += Qe_perp > 0 ? (Qe_perp*1e3) * L / (4*GAs) * 1e3 : 0;
+  w_G  += (G_perp*1e3) * L*L / (8*GAs) * 1e3;
+  w_S  += S_perp > 0 ? (S_perp*1e3) * L*L / (8*GAs) * 1e3 : 0;
+
+  const kd = props.kdef;
+  // Flèche finale chevron: wG*(1+kdef) + wS (psi2=0 pour neige) ou wQe
+  const w_fin_GQe = w_G*(1+kd) + w_Qe;
+  const w_fin_GS  = w_G*(1+kd) + w_S;  // S: psi2=0 → pas de kdef sur S
+  const w_fin = Math.max(w_fin_GQe, w_fin_GS);
+  const w_fin_label = w_fin_GS >= w_fin_GQe ? 'G+S' : 'G+Qe';
+  const w_inst_dim = Math.max(w_Qe, w_S);
+  const w_inst_label = w_S >= w_Qe ? 'S' : 'Qe';
+
+  // Limites flèches chevron (toiture): L/150 inst et finale
+  const fl_lim_inst = L*1000/150;   // L/150 pour chevrons
+  const fl_lim_fin  = L*1000/150;
+  const taux_fl_inst = w_inst_dim/fl_lim_inst*100;
+  const taux_fl_fin  = w_fin/fl_lim_fin*100;
+
+  // ── RÉACTIONS ──
+  const R_G_v  = G_total * L/2;
+  const R_S_v  = S_lin_horiz * L/2;
+  const R_Qe_v = Qe/2;
+
+  return {
+    mass, pp, A_mm2, Iy_mm4, Wely,
+    M_elu, M_GQe, M_GS, M_label,
+    N_elu, N_GQe, N_GS,
+    fm_d, fc0_d, fv_d, kmod,
+    sigma_m, sigma_c, tau_d,
+    taux_res, taux_cis,
+    lam_rel_y, lam_rel_z, kc_y, kc_z,
+    taux_flamb, taux_flamb_y, taux_flamb_z, flamb_label,
+    lambda_rel_m, k_crit, sigma_crit, taux_dev,
+    w_Qe, w_G, w_S, w_fin, w_fin_label,
+    w_inst_dim, w_inst_label,
+    fl_lim_inst, fl_lim_fin,
+    taux_fl_inst, taux_fl_fin,
+    R_G_v, R_S_v, R_Qe_v,
+    ok_res:  taux_res  <= 100,
+    ok_cis:  taux_cis  <= 100,
+    ok_fl:   taux_flamb <= 100,
+    ok_fi:   taux_fl_inst <= 100,
+    ok_ff:   taux_fl_fin  <= 100,
+  };
+}
+
+function tBar(val) {
+  const w = Math.min(val, 100);
+  const cl = val>100?'danger':val>80?'warn':'';
+  return `<div class="taux-wrap">
+    <div class="taux-bar-bg"><div class="taux-bar-fill ${cl}" style="width:${w}%"></div></div>
+    <strong>${val.toFixed(1)}%</strong>
+  </div>`;
+}
+
+function calculer() {
+  const L       = parseFloat(document.getElementById('longueur').value)||0;
+  const entraxe = parseFloat(document.getElementById('entraxe').value)||0;
+  const pct     = parseFloat(document.getElementById('pente_pct').value)||0;
+  const g_r     = parseFloat(document.getElementById('g_rampant').value)/100||0;
+  const sk      = parseFloat(document.getElementById('sk').value)/100||0;
+  const qe      = parseFloat(document.getElementById('qe').value)/100||0;
+  const limDiv  = parseFloat(document.getElementById('limite_fleche').value);
+  const props   = typeActif==='BM' ? getPropsBM() : propLC;
+
+  let sec_mm, nomTest;
+  if (typeActif === 'BM') {
+    // BM : saisie libre b × h
+    const b = parseFloat(document.getElementById('b_libre').value)||0;
+    const h = parseFloat(document.getElementById('h_libre').value)||0;
+    sec_mm = {b, h};
+    nomTest = `${b}×${h}`;
+  } else {
+    // LC : catalogue ou saisie libre
+    if (secMode === 'catalogue') {
+      nomTest = document.getElementById('section_select').value;
+      sec_mm  = bddLC[nomTest];
+    } else {
+      const b = parseFloat(document.getElementById('b_libre_lc').value)||0;
+      const h = parseFloat(document.getElementById('h_libre_lc').value)||0;
+      sec_mm  = {b, h};
+      nomTest = `${b}×${h}`;
+    }
+  }
+
+  const alpha_deg = Math.atan(pct/100)*180/Math.PI;
+  const alpha_rad = alpha_deg * Math.PI/180;
+  const cos_a     = Math.cos(alpha_rad);
+  const G_lin     = g_r * entraxe;
+
+  // Convention itech — formule neige :
+  // μ1 = 0.8 pour α ≤ 30°, μ1 = 0.8×(60-α)/30 pour 30° < α ≤ 60°
+  let mu1;
+  if      (alpha_deg <= 30) mu1 = 0.8;
+  else if (alpha_deg <= 60) mu1 = 0.8 * (60 - alpha_deg) / 30;
+  else                       mu1 = 0.0;
+
+  const S_lin_panne   = sk * entraxe * mu1 * cos_a;  // aplomb : sk×entraxe×μ1×cos(α)
+  const S_lin_dev     = sk * entraxe * cos_a;         // déversée : sk×entraxe×cos(α)
+  const S_lin_chevron = sk * entraxe * cos_a;         // chevron : sk×entraxe×cos(α)
+
+  const S_lin = calcActif === 'panne-dev' ? S_lin_dev
+              : calcActif === 'chevron'    ? S_lin_chevron
+              :                             S_lin_panne;
+
+  if (calcActif === 'panne') {
+    afficherResultatsPanne(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk);
+  } else if (calcActif === 'panne-dev') {
+    afficherResultatsPanneDev(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk);
+  } else {
+    afficherResultatsChevron(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk);
+  }
+}
+
+function afficherResultatsPanne(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk) {
+  const ovh = getOverhang();
+  const res = calcEC5(sec_mm, props, L, G_lin, S_lin, qe, limDiv, ovh.a1, ovh.a2, ovh.qepos);
+  const mu1_val = alpha_deg <= 30 ? 0.8 : alpha_deg <= 60 ? 0.8*(60-alpha_deg)/30 : 0.0;
+
+  // Recherche section optimale
+  let nomOptimal = null;
+  const b = sec_mm.b;
+  if (typeActif === 'BM' || secMode === 'libre') {
+    // BM ou LC saisie libre : h minimale par pas de 5mm
+    for (let h = 50; h <= 800; h += 5) {
+      const r = calcEC5({b, h}, props, L, G_lin, S_lin, qe, limDiv, ovh.a1, ovh.a2, ovh.qepos);
+      if (r.ok_res && r.ok_dev && r.ok_cis && r.ok_fi && r.ok_ff) { nomOptimal = `${b}×${h}`; break; }
+    }
+  } else {
+    // LC catalogue : même largeur b, hauteur suivante dans le catalogue
+    for (let n of Object.keys(bddLC)) {
+      if (bddLC[n].b !== b) continue;
+      const r = calcEC5(bddLC[n], props, L, G_lin, S_lin, qe, limDiv, ovh.a1, ovh.a2, ovh.qepos);
+      if (r.ok_res && r.ok_dev && r.ok_cis && r.ok_fi && r.ok_ff) { nomOptimal = n; break; }
+    }
+  }
+  const optLabel = `Pour b=${b}mm — hauteur minimale validant tous les critères`;
+  document.getElementById('zone_resultat').innerHTML = `
+    <div class="results-wrap">
+      <div><span class="mention-ind">⚠️ Calcul indicatif EC5 — Ne pas utiliser pour l'exécution</span></div>
+      <div class="box-conseil">
+        <div class="profil-opt">📌 Section minimale conseillée : <span>${nomOptimal ? nomOptimal+' mm' : '— Aucune section suffisante —'}</span></div>
+        <div class="italic">${optLabel}</div>
+      </div>
+      <div class="analyse-title">🏗️ PANNE D'APLOMB — ${nomTest} mm — ${props.label} — L = ${L.toFixed(2)} m${res.ov ? ` — débords ${ovh.a1.toFixed(2)} / ${ovh.a2.toFixed(2)} m` : ''}</div>
+      <div class="charge-info">
+        Pente : ${pct}% (${alpha_deg.toFixed(1)}°) | Entraxe : ${entraxe} m<br>
+        G = ${g_r}×${entraxe} + PP ${res.pp.toFixed(3)} = <strong>${(G_lin+res.pp).toFixed(3)} kN/m</strong> |
+        S = ${sk.toFixed(4)}×μ1(${(mu1_val).toFixed(3)})×cos(${alpha_deg.toFixed(1)}°)×${entraxe} = <strong>${S_lin.toFixed(3)} kN/m</strong> |
+        Qe = <strong>${qe} kN</strong><br>
+        Masse : ${res.mass.toFixed(1)} kg | I = ${(res.Iy_mm4/1e4).toFixed(0)} cm⁴ | Wel = ${(res.Wely_mm3/1e3).toFixed(0)} cm³ | Comb. : ${res.M_GS>=res.M_GQe?'1.35G+1.5S':'1.35G+1.5Qe'}
+      </div>
+      <table>
+        <tr><th>Critère EC5</th><th>Valeur</th><th>Limite</th><th>Taux</th><th>✓</th></tr>
+        <tr><td>Flexion</td><td>σm=${res.sigma_m.toFixed(2)} MPa / M=${res.M_elu.toFixed(2)} kNm</td><td>fm,d=${res.fm_d.toFixed(2)} MPa</td><td>${tBar(res.taux_res)}</td><td>${res.ok_res?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Déversement (kcrit=${res.k_crit.toFixed(2)}, λrel=${res.lambda_rel.toFixed(2)})</td><td>σm=${res.sigma_m.toFixed(2)} MPa</td><td>kcrit×fm,y,d=${(res.k_crit*res.fm_d).toFixed(2)} MPa</td><td>${tBar(res.taux_dev)}</td><td>${res.ok_dev?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Cisaillement</td><td>τd=${res.tau_d.toFixed(2)} MPa</td><td>fv,d=${res.fv_d.toFixed(2)} MPa</td><td>${tBar(res.taux_cis)}</td><td>${res.ok_cis?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèche inst. (${res.w_inst_label})</td><td>w=${res.w_inst_dim.toFixed(2)} mm (L/${Math.round(L*1000/Math.max(res.w_inst_dim,0.01))})</td><td>L/${limDiv}=${res.fl_lim_inst.toFixed(1)} mm</td><td>${tBar(res.taux_fl_inst)}</td><td>${res.taux_fl_inst<=100?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèche finale (${res.w_fin_label}, kdef=${props.kdef})</td><td>wfin=${res.w_fin.toFixed(2)} mm</td><td>L/200=${res.fl_lim_fin.toFixed(1)} mm</td><td>${tBar(res.taux_fl_fin)}</td><td>${res.taux_fl_fin<=100?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        ${res.tips.map(t => `
+        <tr><td>Flèche inst. débord ${t.cote} (${t.a.toFixed(2)} m)</td><td>w=${t.w_inst.toFixed(2)} mm</td><td>2a/${limDiv}=${t.lim_inst.toFixed(1)} mm</td><td>${tBar(t.taux_inst)}</td><td>${t.taux_inst<=100?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèche finale débord ${t.cote}</td><td>wfin=${t.w_fin.toFixed(2)} mm</td><td>2a/200=${t.lim_fin.toFixed(1)} mm</td><td>${tBar(t.taux_fin)}</td><td>${t.taux_fin<=100?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>`).join('')}
+      </table>
+      <hr class="sep">
+      <div class="footer-res">R_G=${res.R_G_v.toFixed(2)} kN | R_S=${res.R_S_v.toFixed(2)} kN | R_Qe=${res.R_Qe_v.toFixed(2)} kN${res.ov ? ' (appui le plus chargé)' : ''}<br>
+      <small style="color:#999;">EC5 Cl.2 — kmod=0.9 — kdef=${props.kdef} — γM=${props.gamma_M} — Calcul indicatif.</small></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+// MOTEUR PANNE DÉVERSÉE EC5 §6.2.4
+// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// POUTRE 2 APPUIS + DÉBORDS — champs M, V, flèche (flexion + effort tranchant)
+// Axes : x depuis l'appui A (x=0), appui B à x=L, débords a1 (gauche) / a2 (droit)
+// Charges vers le bas positives. M en kNm, V en kN, flèches en mm (vers le bas > 0).
+// ═══════════════════════════════════════════════════════════
+function ovGrid(a1, a2, L, extra) {
+  const bp = [-a1, 0, L, L + a2];
+  (extra || []).forEach(x => { if (x > -a1 + 1e-9 && x < L + a2 - 1e-9) bp.push(x); });
+  const u = Array.from(new Set(bp.map(x => Math.round(x * 1e9) / 1e9))).sort((p, q) => p - q);
+  const tot = L + a1 + a2, xs = [u[0]];
+  for (let i = 1; i < u.length; i++) {
+    const n = Math.max(6, Math.ceil((u[i] - u[i - 1]) / tot * 600));
+    for (let k = 1; k <= n; k++) xs.push(u[i - 1] + (u[i] - u[i - 1]) * k / n);
+  }
+  return xs;
+}
+
+function ovField(xs, a1, L, w, P, xp, EI, GAs) {
+  // w : kN/m sur toute la longueur ; P : kN à l'abscisse xp
+  const a2 = xs[xs.length - 1] - L;
+  const R_B = w * ((L + a2) ** 2 - a1 ** 2) / (2 * L) + P * xp / L;
+  const R_A = w * (a1 + L + a2) + P - R_B;
+  const Mat = x => R_A * Math.max(x, 0) + R_B * Math.max(x - L, 0) - w * (x + a1) ** 2 / 2 - P * Math.max(x - xp, 0);
+  const Vat = (x, s) => { // s=+1 : juste à droite de x ; s=-1 : juste à gauche
+    const e = s * 1e-9, y = x + e;
+    return R_A * (y > 0 ? 1 : 0) + R_B * (y > L ? 1 : 0) - w * (y + a1) - P * (y > xp ? 1 : 0);
+  };
+  const n = xs.length, M = new Array(n), Vl = new Array(n - 1), Vr = new Array(n - 1);
+  for (let i = 0; i < n; i++) M[i] = Mat(xs[i]);
+  for (let i = 0; i < n - 1; i++) { Vl[i] = Vat(xs[i], +1); Vr[i] = Vat(xs[i + 1], -1); }
+  // intégrations : κ = M/EI ; θ = ∫κ ; y = ∫θ  (y positif vers le haut) ; cisaillement : y' = -V/GAs
+  const th = [0], yy = [0];
+  for (let i = 1; i < n; i++) th.push(th[i - 1] + (xs[i] - xs[i - 1]) * (M[i - 1] + M[i]) / 2 * 1000 / EI);
+  for (let i = 1; i < n; i++) {
+    const dx = xs[i] - xs[i - 1];
+    let d = dx * (th[i - 1] + th[i]) / 2;
+    if (GAs > 0) d -= dx * ((Vl[i - 1] + Vr[i - 1]) / 2) * 1000 / GAs;
+    yy.push(yy[i - 1] + d);
+  }
+  const iA = xs.findIndex(x => Math.abs(x) < 1e-9), iB = xs.findIndex(x => Math.abs(x - L) < 1e-9);
+  const yA = yy[iA], slope = (yy[iB] - yy[iA]) / L;
+  const v = yy.map((y, i) => -(y - yA - slope * xs[i]) * 1000);   // mm, vers le bas > 0
+  return { M, Vl, Vr, v, R_A, R_B };
+}
+
+function ovAdd(f, g, c) { // f + c·g
+  return { M: f.M.map((m, i) => m + c * g.M[i]), Vl: f.Vl.map((m, i) => m + c * g.Vl[i]),
+           Vr: f.Vr.map((m, i) => m + c * g.Vr[i]), v: f.v.map((m, i) => m + c * g.v[i]),
+           R_A: f.R_A + c * g.R_A, R_B: f.R_B + c * g.R_B };
+}
+
+// Axe avec éventuels appuis ponctuels en bout de débord (appuis latéraux) : méthode des forces
+function ovSolve(xs, a1, a2, L, w, P, xp, EI, GAs, tips) {
+  const free = ovField(xs, a1, L, w, P, xp, EI, GAs);
+  const idx = [];
+  if (tips.left && a1 > 0) idx.push({ i: 0, x: -a1 });
+  if (tips.right && a2 > 0) idx.push({ i: xs.length - 1, x: L + a2 });
+  if (!idx.length) return free;
+  const units = idx.map(t => ovField(xs, a1, L, 0, 1, t.x, EI, GAs));
+  const k = idx.length;
+  const A = idx.map((ti) => units.map(u => u.v[ti.i]));
+  const b = idx.map(ti => -free.v[ti.i]);
+  let c;
+  if (k === 1) c = [b[0] / A[0][0]];
+  else {
+    const det = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+    c = [(b[0] * A[1][1] - A[0][1] * b[1]) / det, (A[0][0] * b[1] - b[0] * A[1][0]) / det];
+  }
+  let out = free;
+  units.forEach((u, j) => { out = ovAdd(out, u, c[j]); });
+  out.tipReact = c.map(v => -v);   // réaction (kN, vers le haut > 0)
+  return out;
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// PANNE DÉVERSÉE AVEC PORTE-À-FAUX — bi-flexion EC5 §6.2.4, appui latéral en bout de débord,
+// flèches avec déformation d'effort tranchant (cf. note itech de référence)
+// ═══════════════════════════════════════════════════════════
+function calcPanneDevOv(sec_mm, props, L, a1, a2, G_lin, S_nomu, qe, alpha_deg, qepos, lat, limDiv) {
+  const b = sec_mm.b, h = sec_mm.h;
+  const al = alpha_deg * Math.PI / 180, ca = Math.cos(al), sa = Math.sin(al);
+  const mu1 = alpha_deg <= 30 ? 0.8 : alpha_deg <= 60 ? 0.8 * (60 - alpha_deg) / 30 : 0;
+  const A_mm2 = b * h, Wy = b * h * h / 6, Wz = h * b * b / 6;
+  const Iy = b * h ** 3 / 12 * 1e-12, Iz = h * b ** 3 / 12 * 1e-12;
+  const pp = (b / 1000) * (h / 1000) * props.densite * 9.81 / 1000;
+  const g = G_lin + pp;            // G + poids propre, charge verticale (kN/m)
+  const s = S_nomu * mu1;          // neige verticale = sk·E·μ1·cos(α)
+  const E = props.E0 * 1e6;
+  const GAs = props.Gmean * 1e6 * (A_mm2 * 1e-6) / 1.2;   // G moyen, section réduite A/1.2
+  const kd = props.kdef;
+  const xpQ = qepos === 'tip' ? (a2 >= a1 ? L + a2 : -a1) : L / 2;
+  const xs = ovGrid(a1, a2, L, [xpQ]);
+  const tipsY = {left: false, right: false}, tipsZ = {left: !!lat, right: !!lat};
+  // axe fort y : composante ⊥ rampant (cos α) ; axe faible z : composante ∥ rampant (sin α)
+  const fy = (w, P) => ovSolve(xs, a1, a2, L, w * ca, P * ca, xpQ, E * Iy, GAs, tipsY);
+  const fz = (w, P) => ovSolve(xs, a1, a2, L, w * sa, P * sa, xpQ, E * Iz, GAs, tipsZ);
+  const Gy = fy(g, 0), Sy = fy(s, 0), Qy = fy(0, qe);
+  const Gz = fz(g, 0), Sz = fz(s, 0), Qz = fz(0, qe);
+
+  const n = xs.length;
+  const mix = pairs => {
+    const o = {M: new Array(n).fill(0), Vl: new Array(n - 1).fill(0), Vr: new Array(n - 1).fill(0)};
+    pairs.forEach(([c, f]) => {
+      f.M.forEach((m, i) => { o.M[i] += c * m; });
+      f.Vl.forEach((m, i) => { o.Vl[i] += c * m; });
+      f.Vr.forEach((m, i) => { o.Vr[i] += c * m; });
+    });
+    return o;
+  };
+  const vmax = f => Math.max(...f.Vl.map(Math.abs), ...f.Vr.map(Math.abs));
+
+  const kh_y = h < 150 ? Math.min((150 / h) ** 0.2, 1.3) : 1.0;
+  const kh_z = b < 150 ? Math.min((150 / b) ** 0.2, 1.3) : 1.0;
+  const km = 0.7, kcr = 0.67, gam = props.gamma_M;
+  const LCs = [
+    {label: '1.35G',        kmod: 0.6, y: [[1.35, Gy]],             z: [[1.35, Gz]]},
+    {label: '1.35G+1.5Qe',  kmod: 0.9, y: [[1.35, Gy], [1.5, Qy]],  z: [[1.35, Gz], [1.5, Qz]]},
+    {label: '1.35G+1.5S',   kmod: 0.9, y: [[1.35, Gy], [1.5, Sy]],  z: [[1.35, Gz], [1.5, Sz]]},
+  ].map(lc => {
+    const My = mix(lc.y), Mz = mix(lc.z);
+    const fmy = lc.kmod * props.fm_k * kh_y / gam, fmz = lc.kmod * props.fm_k * kh_z / gam;
+    const fvd = lc.kmod * props.fv_k / gam;
+    let t = 0, iM = 0;
+    for (let i = 0; i < n; i++) {
+      const sy = Math.abs(My.M[i]) * 1e6 / Wy, sz = Math.abs(Mz.M[i]) * 1e6 / Wz;
+      const ti = Math.max(sy / fmy + km * sz / fmz, km * sy / fmy + sz / fmz);
+      if (ti > t) { t = ti; iM = i; }
+    }
+    const Vz = vmax(My), Vy = vmax(Mz);
+    const tau = 1.5 * Vz * 1e3 / (kcr * A_mm2);
+    return {label: lc.label, kmod: lc.kmod, fmy, fmz, fvd, taux: t * 100,
+            My: Math.abs(My.M[iM]), Mz: Math.abs(Mz.M[iM]),
+            sy: Math.abs(My.M[iM]) * 1e6 / Wy, sz: Math.abs(Mz.M[iM]) * 1e6 / Wz,
+            Vz, Vy, tau, tcis: tau / fvd * 100};
+  });
+  const best = LCs.reduce((p, q) => q.taux > p.taux ? q : p);
+  const bestV = LCs.reduce((p, q) => q.tcis > p.tcis ? q : p);
+
+  // Déversement §6.3.3 (itech : 0 % tant que λrel,m ≤ 0.75)
+  const beta = 1 / 3 * (1 - 0.63 * b / h), Itor = beta * b ** 3 * h;
+  const sig_crit = Math.PI / (Wy * L * 1000) * Math.sqrt(props.E05 * (h * b ** 3 / 12) * props.G05 * Itor);
+  const lambda_rel = Math.sqrt(props.fm_k / sig_crit);
+  const k_crit = lambda_rel <= 0.75 ? 1.0 : lambda_rel <= 1.4 ? 1.56 - 0.75 * lambda_rel : 1 / lambda_rel ** 2;
+  const taux_dev = lambda_rel <= 0.75 ? 0 : best.sy / (k_crit * best.fmy) * 100;
+
+  // Flèches (travée + consoles) selon les deux axes
+  const regions = [{nom: 'Travée', lo: 0, hi: L, len: L, ov: false}];
+  if (a1 > 0) regions.push({nom: 'Console gauche', lo: -a1, hi: 0, len: a1, ov: true});
+  if (a2 > 0) regions.push({nom: 'Console droite', lo: L, hi: L + a2, len: a2, ov: true});
+  const rmax = (arr, lo, hi) => {
+    let m = 0;
+    xs.forEach((x, i) => { if (x >= lo - 1e-9 && x <= hi + 1e-9) m = Math.max(m, Math.abs(arr[i])); });
+    return m;
+  };
+  const defl = [];
+  [['w', Gy, Sy, Qy, false], ['v', Gz, Sz, Qz, true]].forEach(([axe, Gf, Sf, Qf, isZ]) => {
+    regions.forEach(r => {
+      const tied = isZ && lat && r.ov;                 // console maintenue latéralement = travée de longueur a
+      const fac = (r.ov && !tied) ? 2 : 1;
+      const limI = fac * r.len * 1000 / limDiv, limF = fac * r.len * 1000 / 200;
+      const iS = rmax(Sf.v, r.lo, r.hi), iQ = rmax(Qf.v, r.lo, r.hi);
+      const fG  = rmax(Gf.v.map(v => v * (1 + kd)), r.lo, r.hi);
+      const fGS = rmax(Gf.v.map((v, i) => v * (1 + kd) + Sf.v[i]), r.lo, r.hi);
+      const fGQ = rmax(Gf.v.map((v, i) => v * (1 + kd) + Qf.v[i]), r.lo, r.hi);
+      const fin = Math.max(fG, fGS, fGQ);
+      const finLabel = fin === fGS ? 'G+S' : fin === fGQ ? 'G+Qe' : 'G';
+      const base = r.ov ? (tied ? 'a' : '2a') : 'L';
+      defl.push({axe, nom: r.nom + (tied ? ' (maintenue)' : ''),
+        inst: Math.max(iS, iQ), instLabel: iS >= iQ ? 'S' : 'Qe', limInst: limI,
+        limInstTxt: base + '/' + limDiv, tInst: Math.max(iS, iQ) / limI * 100,
+        fin, finLabel, limFin: limF, limFinTxt: base + '/200', tFin: fin / limF * 100});
+    });
+  });
+
+  const ok = best.taux <= 100 && bestV.tcis <= 100 && taux_dev <= 100 &&
+             defl.every(d => d.tInst <= 100 && d.tFin <= 100);
+  return {pp, g, s, mu1, LCs, best, bestV, kh_y, kh_z, lambda_rel, k_crit, taux_dev,
+          taux_res: best.taux, taux_cis: bestV.tcis, defl, ok, Wy, Wz,
+          mass: (b / 1000) * (h / 1000) * (L + a1 + a2) * props.densite, Iy_mm4: Iy * 1e12};
+}
+
+function calcPanneDev(sec_mm, props, L, G_lin, S_lin, qe, alpha_deg) {
+  // G_lin = charge permanente en kN/m sur le RAMPANT (hors PP)
+  // S_lin = charge de neige en kN/m sur le rampant (déjà μ1 appliqué, charge verticale projetée)
+  // qe    = force d'entretien ponctuelle en kN (verticale, mi-portée)
+  const b = sec_mm.b, h = sec_mm.h;
+  const b_m = b/1000, h_m = h/1000;
+  const alpha_rad = alpha_deg * Math.PI / 180;
+  const cos_a = Math.cos(alpha_rad);
+  const sin_a = Math.sin(alpha_rad);
+
+  // Propriétés section
+  const A_mm2  = b * h;
+  const Iy_mm4 = b * h**3 / 12;  // axe fort (flexion ⊥ rampant)
+  const Iz_mm4 = h * b**3 / 12;  // axe faible (flexion ∥ rampant)
+  const Wely   = b * h**2 / 6;
+  const Welz   = h * b**2 / 6;
+  const pp     = b_m * h_m * props.densite * 9.81 / 1000; // kN/m rampant
+
+  const G_total = G_lin + pp; // kN/m rampant total
+
+  // Charge de neige sur le rampant : S_rampant = sk × cos(α)
+  // (S_lin est le sk en kN/m déjà multiplié par l'entraxe)
+  // Le logiciel itech projette la neige sur le rampant via cos(α)
+  const mu1 = cos_a;  // convention itech : S_rampant = sk * cos(α)
+  const S_red = S_lin * cos_a;  // kN/m sur le rampant
+
+  // Décomposition sur axes de la panne :
+  // G est sur le rampant → G_perp = G×cos(α), G_par = G×sin(α)
+  // S_red est déjà la charge sur le rampant (= sk×entraxe×cos(α))
+  // → S se projette directement : S_perp = S_red (composante ⊥), S_par = S_red×tan(α)... 
+  // MAIS: S_red = charge rampant, décomposée sur axes panne :
+  // S_perp = S_red × cos(α) = sk×E×cos²(α) → trop petit
+  // Convention itech confirmée: S_rampant appliqué directement sur My et Mz
+  // S_perp = S_red (charge ⊥ rampant = S_rampant elle-même)
+  // S_paral = S_red × sin(α)/cos(α) = S_red × tan(α) → NON
+  // 
+  // Retour aux fondamentaux: S est une charge VERTICALE sur surface HORIZONTALE
+  // S_vertical = sk × entraxe (kN/m, charge verticale linéique)
+  // Projection sur axe fort (⊥ rampant): S_vertical × cos(α)
+  // Projection sur axe faible (∥ rampant): S_vertical × sin(α)
+  // S_vertical = sk * entraxe = S_lin (brut passé depuis calculer())
+  const S_vert  = S_lin;   // charge neige VERTICALE = sk×entraxe (brut)
+  const G_perp  = G_total * cos_a;
+  const G_paral = G_total * sin_a;
+  const S_perp  = S_vert  * cos_a;   // un seul cos(α)
+  const S_paral = S_vert  * sin_a;   // un seul sin(α)
+  // Qe vertical → même décomposition
+  const Qe_perp  = qe * cos_a;
+  const Qe_paral = qe * sin_a;
+
+  // ── ELU : 3 combinaisons, on retient la plus défavorable ──
+  // LC1 : 1.35G  → kmod = 0.6 (permanent)
+  // LC2 : 1.35G + 1.5Qe → kmod = 0.9 (court terme)
+  // LC3 : 1.35G + 1.5S  → kmod = 0.9 (court terme)
+  const kmod_perm = 0.6, kmod_ct = 0.9;
+  // kh : facteur de hauteur EC5 §3.2 — s'applique si b ou h < 150mm
+  const kh_y = (h < 150) ? Math.min(Math.pow(150/h, 0.2), 1.3) : 1.0;
+  const kh_z = (b < 150) ? Math.min(Math.pow(150/b, 0.2), 1.3) : 1.0;
+  const fm_y_d_perm = kmod_perm * props.fm_k * kh_y / props.gamma_M;
+  const fm_z_d_perm = kmod_perm * props.fm_k * kh_z / props.gamma_M;
+  const fv_d_perm   = kmod_perm * props.fv_k / props.gamma_M;
+  const fm_y_d_ct   = kmod_ct   * props.fm_k * kh_y / props.gamma_M;
+  const fm_z_d_ct   = kmod_ct   * props.fm_k * kh_z / props.gamma_M;
+  const fv_d_ct     = kmod_ct   * props.fv_k / props.gamma_M;
+  const km = 0.7;
+
+  function bifTaux(My_kNm, Mz_kNm, fm_y_d, fm_z_d) {
+    const smy = My_kNm * 1e6 / Wely;
+    const smz = Mz_kNm * 1e6 / Welz;
+    const t1 = (smy/fm_y_d + km*smz/fm_z_d);  // eq 6.11
+    const t2 = (km*smy/fm_y_d + smz/fm_z_d);  // eq 6.12
+    return { smy, smz, t1, t2, taux: Math.max(t1,t2)*100 };
+  }
+
+  // LC1 : 1.35G permanent
+  const My_LC1 = 1.35*G_perp  * L*L/8;
+  const Mz_LC1 = 1.35*G_paral * L*L/8;
+  const Vz_LC1 = 1.35*G_perp  * L/2;
+  const Vy_LC1 = 1.35*G_paral * L/2;
+  const r1 = bifTaux(My_LC1, Mz_LC1, fm_y_d_perm, fm_z_d_perm);
+  const tau_LC1 = 1.5 * (Vz_LC1*1e3) / A_mm2;
+  const tcis_LC1 = tau_LC1 / fv_d_perm * 100;
+
+  // LC2 : 1.35G + 1.5Qe court terme
+  const My_LC2 = 1.35*G_perp  * L*L/8 + 1.5*Qe_perp  * L/4;
+  const Mz_LC2 = 1.35*G_paral * L*L/8 + 1.5*Qe_paral * L/4;
+  const Vz_LC2 = 1.35*G_perp  * L/2   + 1.5*Qe_perp/2;
+  const Vy_LC2 = 1.35*G_paral * L/2   + 1.5*Qe_paral/2;
+  const r2 = bifTaux(My_LC2, Mz_LC2, fm_y_d_ct, fm_z_d_ct);
+  const tau_LC2 = 1.5 * (Vz_LC2*1e3) / A_mm2;
+  const tcis_LC2 = tau_LC2 / fv_d_ct * 100;
+
+  // LC3 : 1.35G + 1.5S court terme
+  const My_LC3 = 1.35*G_perp  * L*L/8 + 1.5*S_perp  * L*L/8;
+  const Mz_LC3 = 1.35*G_paral * L*L/8 + 1.5*S_paral * L*L/8;
+  const Vz_LC3 = 1.35*G_perp  * L/2   + 1.5*S_perp  * L/2;
+  const Vy_LC3 = 1.35*G_paral * L/2   + 1.5*S_paral * L/2;
+  const r3 = bifTaux(My_LC3, Mz_LC3, fm_y_d_ct, fm_z_d_ct);
+  const tau_LC3 = 1.5 * (Vz_LC3*1e3) / A_mm2;
+  const tcis_LC3 = tau_LC3 / fv_d_ct * 100;
+
+  // Combinaison dimensionnante résistance
+  const combos = [
+    {label:'1.35G (perm.)', My:My_LC1, Mz:Mz_LC1, r:r1, fm_y_d:fm_y_d_perm, fm_z_d:fm_z_d_perm, fv_d:fv_d_perm, tau:tau_LC1, tcis:tcis_LC1, kmod:kmod_perm},
+    {label:'1.35G+1.5Qe',  My:My_LC2, Mz:Mz_LC2, r:r2, fm_y_d:fm_y_d_ct,   fm_z_d:fm_z_d_ct,   fv_d:fv_d_ct,   tau:tau_LC2, tcis:tcis_LC2, kmod:kmod_ct},
+    {label:'1.35G+1.5S',   My:My_LC3, Mz:Mz_LC3, r:r3, fm_y_d:fm_y_d_ct,   fm_z_d:fm_z_d_ct,   fv_d:fv_d_ct,   tau:tau_LC3, tcis:tcis_LC3, kmod:kmod_ct},
+  ];
+  const best = combos.reduce((a,b) => b.r.taux > a.r.taux ? b : a);
+
+  const My_elu = best.My, Mz_elu = best.Mz;
+  const fm_y_d = best.fm_y_d, fm_z_d = best.fm_z_d, fv_d = best.fv_d;
+  const sigma_my = best.r.smy, sigma_mz = best.r.smz;
+  const taux_bif_1 = best.r.t1*100, taux_bif_2 = best.r.t2*100;
+  const taux_res = best.r.taux;
+  const tau_d = best.tau;
+  const taux_cis = best.tcis;
+
+  // Déversement EC5 §6.3.3 (sur My dimensionnant)
+  const beta_tor   = 1/3 * (1 - 0.63*b/h);
+  const Itor_mm4   = beta_tor * b**3 * h;
+  const Lef        = L * 1000;
+  const sigma_crit = Math.PI/(Wely*Lef) * Math.sqrt(props.E05*Iz_mm4*props.G05*Itor_mm4);
+  const lambda_rel = Math.sqrt(props.fm_k / sigma_crit);
+  let k_crit;
+  if      (lambda_rel <= 0.75) k_crit = 1.0;
+  else if (lambda_rel <= 1.4)  k_crit = 1.56 - 0.75*lambda_rel;
+  else                          k_crit = 1/lambda_rel**2;
+  const taux_dev = sigma_my / (k_crit * fm_y_d) * 100;
+
+  // ── FLÈCHES ──
+  const E_Pa  = props.E0 * 1e6;
+  const Iy_m4 = Iy_mm4 * 1e-12;
+  const Iz_m4 = Iz_mm4 * 1e-12;
+  const kd    = props.kdef;
+
+  // Flèche G (rampant, répartie)
+  let w_G = 5*G_perp  *1e3*L**4/(384*E_Pa*Iy_m4)*1e3; // mm ⊥ rampant
+  let v_G = 5*G_paral *1e3*L**4/(384*E_Pa*Iz_m4)*1e3; // mm ∥ rampant
+
+  // Flèche S (répartie, verticale décomposée)
+  let w_S = S_vert>0 ? 5*S_perp *1e3*L**4/(384*E_Pa*Iy_m4)*1e3 : 0;
+  let v_S = S_vert>0 ? 5*S_paral*1e3*L**4/(384*E_Pa*Iz_m4)*1e3 : 0;
+
+  // Flèche Qe (ponctuelle, verticale décomposée)
+  let w_Qe = qe>0 ? Qe_perp *1e3*L**3/(48*E_Pa*Iy_m4)*1e3 : 0;
+  let v_Qe = qe>0 ? Qe_paral*1e3*L**3/(48*E_Pa*Iz_m4)*1e3 : 0;
+  // Déformation d'effort tranchant (G moyen, section réduite A/1.2)
+  {
+    const GAs_ = props.Gmean*1e6*(sec_mm.b*sec_mm.h*1e-6)/1.2;
+    const sh_q = q => q*1e3*L*L/(8*GAs_)*1e3, sh_p = P => P*1e3*L/(4*GAs_)*1e3;
+    w_G += sh_q(G_perp); v_G += sh_q(G_paral);
+    if (S_vert>0) { w_S += sh_q(S_perp); v_S += sh_q(S_paral); }
+    if (qe>0) { w_Qe += sh_p(Qe_perp); v_Qe += sh_p(Qe_paral); }
+  }
+
+  // Instantanée : S ou Qe (le plus défavorable)
+  const w_inst = Math.max(w_S, w_Qe);
+  const v_inst = Math.max(v_S, v_Qe);
+  const w_inst_label = w_S >= w_Qe ? 'S' : 'Qe';
+  const v_inst_label = v_S >= v_Qe ? 'S' : 'Qe';
+
+  // Finale EC5 : G(1+kdef) + S (ψ2=0 neige, pas de kdef) + Qe (ψ2=0 entretien)
+  // wcreep = w_G * kdef (fluage sur G uniquement)
+  const w_fin = w_G*(1+kd) + w_S;
+  const v_fin = v_G*(1+kd) + v_S;
+
+  return {
+    pp, b, h, A_mm2, Iy_mm4, Iz_mm4, Wely, Welz,
+    combos, best,
+    My_elu, Mz_elu, fm_y_d, fm_z_d, fv_d, km,
+    sigma_my, sigma_mz, tau_d,
+    taux_bif_1, taux_bif_2, taux_res, taux_cis,
+    sigma_crit, lambda_rel, k_crit, taux_dev,
+    w_G, v_G, w_S, v_S, w_Qe, v_Qe,
+    w_inst, v_inst, w_inst_label, v_inst_label,
+    w_fin, v_fin,
+    mu1, S_red:S_vert, kh_y, kh_z, fm_y_d, fm_z_d,
+    ok_res: taux_res <= 100,
+    ok_cis: taux_cis <= 100,
+    ok_dev: taux_dev <= 100,
+  };
+}
+
+
+function afficherResultatsPanneDevOv(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk, ovh) {
+  const run = s => calcPanneDevOv(s, props, L, ovh.a1, ovh.a2, G_lin, S_lin, qe, alpha_deg, ovh.qepos, ovh.lat, limDiv);
+  const res = run(sec_mm);
+  let nomOptimal = null;
+  const b = sec_mm.b;
+  if (typeActif === 'BM' || secMode === 'libre') {
+    for (let h = 50; h <= 800; h += 5) { if (run({b, h}).ok) { nomOptimal = `${b}×${h}`; break; } }
+  } else {
+    for (let n of Object.keys(bddLC)) { if (bddLC[n].b !== b) continue; if (run(bddLC[n]).ok) { nomOptimal = n; break; } }
+  }
+  const okI = t => t <= 100 ? '<span class="ok">✓</span>' : '<span class="nok">✗</span>';
+  const f2 = v => v.toFixed(2);
+  const bst = res.best, bv = res.bestV;
+  const defRows = res.defl.map(d => `
+        <tr><td>Flèche inst. ${d.axe} — ${d.nom} (${d.instLabel})</td><td>${f2(d.inst)} mm</td><td>${d.limInstTxt}=${f2(d.limInst)} mm</td><td>${tBar(d.tInst)}</td><td>${okI(d.tInst)}</td></tr>
+        <tr><td>Flèche finale ${d.axe} — ${d.nom} (${d.finLabel}, kdef=${props.kdef})</td><td>${f2(d.fin)} mm</td><td>${d.limFinTxt}=${f2(d.limFin)} mm</td><td>${tBar(d.tFin)}</td><td>${okI(d.tFin)}</td></tr>`).join('');
+  const devTxt = res.lambda_rel <= 0.75
+    ? `<td>λrel=${res.lambda_rel.toFixed(2)} ≤ 0.75</td><td>Aucun risque de déversement</td>`
+    : `<td>σm,y=${f2(bst.sy)} MPa</td><td>kcrit×fm,y,d=${f2(res.k_crit * bst.fmy)} MPa</td>`;
+  document.getElementById('zone_resultat').innerHTML = `
+    <div class="results-wrap">
+      <div><span class="mention-ind">⚠️ Calcul indicatif EC5 — Ne pas utiliser pour l'exécution</span></div>
+      <div class="box-conseil">
+        <div class="profil-opt">📌 Section minimale conseillée : <span>${nomOptimal ? nomOptimal + ' mm' : '— Aucune section suffisante —'}</span></div>
+        <div class="italic">Pour b=${b}mm — hauteur minimale validant bi-flexion, cisaillement, stabilité et flèches</div>
+      </div>
+      <div class="analyse-title">📐 PANNE DÉVERSÉE — ${nomTest} mm — ${props.label} — L = ${L.toFixed(2)} m — débords ${ovh.a1.toFixed(2)} / ${ovh.a2.toFixed(2)} m</div>
+      <div class="charge-info">
+        Pente : ${pct}% (${alpha_deg.toFixed(1)}°) | Entraxe : ${entraxe} m | Appui latéral en bout de débord : ${ovh.lat ? 'oui' : 'non'}<br>
+        G = ${g_r}×${entraxe} + PP ${res.pp.toFixed(3)} = <strong>${res.g.toFixed(3)} kN/m</strong> |
+        S = ${sk.toFixed(4)}×μ1(${res.mu1.toFixed(2)})×cos(${alpha_deg.toFixed(1)}°)×${entraxe} = <strong>${res.s.toFixed(3)} kN/m</strong> |
+        Qe = <strong>${qe} kN</strong><br>
+        Masse : ${res.mass.toFixed(1)} kg | Iy = ${(res.Iy_mm4 / 1e4).toFixed(0)} cm⁴ | Comb. dimensionnante : ${bst.label} (kmod=${bst.kmod})
+      </div>
+      <table>
+        <tr><th>Critère EC5</th><th>Valeur</th><th>Limite</th><th>Taux</th><th>✓</th></tr>
+        <tr><td>Flexion bi-axiale §6.2.4<br><small>My=${f2(bst.My)} kNm / Mz=${f2(bst.Mz)} kNm</small></td><td>σm,y=${f2(bst.sy)} / σm,z=${f2(bst.sz)} MPa</td><td>fm,y,d=${f2(bst.fmy)} / fm,z,d=${f2(bst.fmz)} MPa</td><td>${tBar(res.taux_res)}</td><td>${okI(res.taux_res)}</td></tr>
+        <tr><td>Cisaillement (kcr=0.67)<br><small>Vz=${f2(bv.Vz)} kN / Vy=${f2(bv.Vy)} kN — ${bv.label}</small></td><td>τd=${f2(bv.tau)} MPa</td><td>fv,d=${f2(bv.fvd)} MPa</td><td>${tBar(res.taux_cis)}</td><td>${okI(res.taux_cis)}</td></tr>
+        <tr><td>Stabilité (déversement §6.3.3)</td>${devTxt}<td>${tBar(res.taux_dev)}</td><td>${okI(res.taux_dev)}</td></tr>${defRows}
+      </table>
+      <hr class="sep">
+      <div class="footer-res"><small style="color:#999;">EC5 Cl.2 — kdef=${props.kdef} — γM=${props.gamma_M} — flèches avec déformation d'effort tranchant — Calcul indicatif.</small></div>
+    </div>`;
+}
+
+function afficherResultatsPanneDev(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk) {
+  const ovh = getOverhang();
+  if (ovh.a1 > 0 || ovh.a2 > 0) {
+    return afficherResultatsPanneDevOv(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk, ovh);
+  }
+  const res = calcPanneDev(sec_mm, props, L, G_lin, S_lin, qe, alpha_deg);
+  const alpha_rad = alpha_deg * Math.PI / 180;
+
+  const fl_lim_inst = L*1000/limDiv;
+  const fl_lim_fin  = L*1000/200;
+
+  const ok_wi = res.w_inst <= fl_lim_inst;
+  const ok_wf = res.w_fin  <= fl_lim_fin;
+  const ok_vi = res.v_inst <= fl_lim_inst;
+  const ok_vf = res.v_fin  <= fl_lim_fin;
+
+  function okAll(r) {
+    const limI = L*1000/limDiv;
+    const limF = L*1000/200;
+    return r.ok_res && r.ok_cis && r.ok_dev &&
+           r.w_inst<=limI && r.w_fin<=limF &&
+           r.v_inst<=limI && r.v_fin<=limF;
+  }
+
+  // Recherche section optimale
+  let nomOptimal = null;
+  const b = sec_mm.b;
+  if (typeActif === 'BM' || secMode === 'libre') {
+    for (let h = 50; h <= 800; h += 5) {
+      const r = calcPanneDev({b, h}, props, L, G_lin, S_lin, qe, alpha_deg);
+      if (okAll(r)) { nomOptimal = b+'×'+h; break; }
+    }
+  } else {
+    for (let n of Object.keys(bddLC)) {
+      if (bddLC[n].b !== b) continue;
+      const r = calcPanneDev(bddLC[n], props, L, G_lin, S_lin, qe, alpha_deg);
+      if (okAll(r)) { nomOptimal = n; break; }
+    }
+  }
+  const optLabel = `Pour b=${b}mm — hauteur minimale validant §6.2.4 bi-flexion + flèches`;
+
+  const rat_wi = res.w_inst>0.1 ? Math.round(L*1000/res.w_inst) : '∞';
+  const rat_wf = res.w_fin >0.1 ? Math.round(L*1000/res.w_fin)  : '∞';
+  const rat_vi = res.v_inst>0.1 ? Math.round(L*1000/res.v_inst) : '∞';
+  const rat_vf = res.v_fin >0.1 ? Math.round(L*1000/res.v_fin)  : '∞';
+
+  const cos_a = Math.cos(alpha_rad);
+  const sin_a = Math.sin(alpha_rad);
+
+  document.getElementById('zone_resultat').innerHTML = `
+    <div class="results-wrap">
+      <div><span class="mention-ind">⚠️ Calcul indicatif EC5 — Ne pas utiliser pour l'exécution</span></div>
+      <div class="box-conseil">
+        <div class="profil-opt">📌 Section minimale conseillée : <span>${nomOptimal ? nomOptimal+' mm' : '— Aucune section suffisante —'}</span></div>
+        <div class="italic">${optLabel}</div>
+      </div>
+
+      <div class="analyse-title">📐 PANNE DÉVERSÉE — ${nomTest} mm — ${props.label} — L=${L.toFixed(2)} m</div>
+      <div class="charge-info">
+        Pente : ${pct}% (${alpha_deg.toFixed(1)}°) | Entraxe : ${entraxe} m<br>
+        G rampant = ${(G_lin+res.pp).toFixed(3)} kN/m → G⊥=${((G_lin+res.pp)*cos_a).toFixed(3)} kN/m | G∥=${((G_lin+res.pp)*sin_a).toFixed(3)} kN/m<br>
+        S au sol=${S_lin.toFixed(3)} kN/m → S rampant=sk×cos(α)=${res.S_red.toFixed(3)} kN/m | kh_y=${res.kh_y.toFixed(3)}/kh_z=${res.kh_z.toFixed(3)} | Qe=${qe} kN<br>
+        <strong>Comb. dim. : ${res.best.label}</strong> (kmod=${res.best.kmod}) — My=${res.My_elu.toFixed(2)} kNm | Mz=${res.Mz_elu.toFixed(2)} kNm
+      </div>
+
+      <table>
+        <tr><th>Critère EC5</th><th>Valeur</th><th>Limite</th><th>Taux</th><th>✓</th></tr>
+        <tr><td>Résistance section<br><small>Bi-flexion §6.2.4 — comb. ${res.best.label}</small></td><td>σmy=${res.sigma_my.toFixed(2)} MPa / M=${res.My_elu.toFixed(2)} kNm</td><td>fm,y,d=${res.fm_y_d.toFixed(2)} / fm,z,d=${res.fm_z_d.toFixed(2)} MPa</td><td>${tBar(res.taux_res)}</td><td>${res.ok_res?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Stabilité (Déversement §6.3.3)<br><small>λrel=${res.lambda_rel.toFixed(2)} kcrit=${res.k_crit.toFixed(2)}</small></td><td>σmy=${res.sigma_my.toFixed(2)} MPa</td><td>kcrit×fm,y,d=${(res.k_crit*res.fm_y_d).toFixed(2)} MPa</td><td>${tBar(res.taux_dev)}</td><td>${res.ok_dev?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Cisaillement (Vz)</td><td>τd=${res.tau_d.toFixed(2)} MPa</td><td>fv,d=${res.fv_d.toFixed(2)} MPa</td><td>${tBar(res.taux_cis)}</td><td>${res.ok_cis?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèches inst. (${res.w_inst_label})</td><td>w⊥=${res.w_inst.toFixed(2)} mm (L/${rat_wi}) | v∥=${res.v_inst.toFixed(2)} mm (L/${rat_vi})</td><td>L/${limDiv}=${fl_lim_inst.toFixed(1)} mm</td><td>${tBar(Math.max(res.w_inst,res.v_inst)/fl_lim_inst*100)}</td><td>${(ok_wi&&ok_vi)?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèches finales (G+S, kdef=${props.kdef})</td><td>wfin⊥=${res.w_fin.toFixed(2)} mm (L/${rat_wf}) | vfin∥=${res.v_fin.toFixed(2)} mm (L/${rat_vf})</td><td>L/200=${fl_lim_fin.toFixed(1)} mm</td><td>${tBar(Math.max(res.w_fin,res.v_fin)/fl_lim_fin*100)}</td><td>${(ok_wf&&ok_vf)?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+      </table>
+
+      <hr class="sep">
+      <div style="font-size:11px;color:#666;margin-top:6px;">
+        <strong>3 combinaisons vérifiées :</strong>
+        ${res.combos.map(c => `${c.label} → ${c.r.taux.toFixed(1)}%${c===res.best?' <strong>(dim.)</strong>':''}`).join(' | ')}
+      </div>
+      <div class="footer-res">
+        Iy=${(res.Iy_mm4/1e4).toFixed(0)} cm⁴ | Iz=${(res.Iz_mm4/1e4).toFixed(0)} cm⁴ | Wely=${(res.Wely/1e3).toFixed(0)} cm³ | Welz=${(res.Welz/1e3).toFixed(0)} cm³<br>
+        <small style="color:#999;">EC5 Cl.2 — kdef=${props.kdef} — γM=${props.gamma_M} — §6.2.4 bi-flexion — Calcul indicatif.</small>
+      </div>
+    </div>`;
+}
+
+
+function afficherResultatsChevron(sec_mm, nomTest, props, L, entraxe, pct, alpha_deg, G_lin, S_lin, qe, limDiv, g_r, sk) {
+  const res = calcChevronEC5(sec_mm, props, L, G_lin, S_lin, qe, limDiv);
+
+  // Recherche section optimale
+  let nomOptimal = null;
+  const b = sec_mm.b;
+  if (typeActif === 'BM' || secMode === 'libre') {
+    for (let h = 50; h <= 800; h += 5) {
+      const r = calcChevronEC5({b, h}, props, L, G_lin, S_lin, qe, limDiv);
+      if (r.ok_res && r.ok_fl && r.ok_cis && r.ok_fi && r.ok_ff) { nomOptimal = `${b}×${h}`; break; }
+    }
+  } else {
+    for (let n of Object.keys(bddLC)) {
+      if (bddLC[n].b !== b) continue;
+      const r = calcChevronEC5(bddLC[n], props, L, G_lin, S_lin, qe, limDiv);
+      if (r.ok_res && r.ok_fl && r.ok_cis && r.ok_fi && r.ok_ff) { nomOptimal = n; break; }
+    }
+  }
+  const optLabel = `Pour b=${b}mm — hauteur minimale validant tous les critères`;
+  const alpha_rad = alpha_deg * Math.PI/180;
+  document.getElementById('zone_resultat').innerHTML = `
+    <div class="results-wrap">
+      <div><span class="mention-ind">⚠️ Calcul indicatif EC5 — Ne pas utiliser pour l'exécution</span></div>
+      <div class="box-conseil">
+        <div class="profil-opt">📌 Section minimale conseillée : <span>${nomOptimal ? nomOptimal+' mm' : '— Aucune section suffisante —'}</span></div>
+        <div class="italic">${optLabel}</div>
+      </div>
+      <div class="analyse-title">🔨 CHEVRON — ${nomTest} mm — ${props.label} — L = ${L.toFixed(2)} m</div>
+      <div class="charge-info">
+        Pente : ${pct}% (${alpha_deg.toFixed(1)}°) | Entraxe : ${entraxe} m<br>
+        G total = ${(G_lin+res.pp).toFixed(3)} kN/m → G⊥=${((G_lin+res.pp)*Math.cos(alpha_rad)).toFixed(3)} kN/m / G∥=${((G_lin+res.pp)*Math.sin(alpha_rad)).toFixed(3)} kN/m<br>
+        S = ${S_lin.toFixed(3)} kN/m horiz. | Qe = ${qe} kN | Comb. dominante : ${res.M_label}<br>
+        M_elu=${res.M_elu.toFixed(2)} kNm | N_elu=${res.N_elu.toFixed(2)} kN (compression)
+      </div>
+      <table>
+        <tr><th>Critère EC5</th><th>Valeur</th><th>Limite</th><th>Taux</th><th>✓</th></tr>
+        <tr><td>Flexion+compression §6.2.4</td><td>σm=${res.sigma_m.toFixed(2)} MPa / σc=${res.sigma_c.toFixed(3)} MPa</td><td>fm,d=${res.fm_d.toFixed(2)} / fc0,d=${res.fc0_d.toFixed(2)} MPa</td><td>${tBar(res.taux_res)}</td><td>${res.ok_res?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flambement ${res.flamb_label}</td><td>λrel,y=${res.lam_rel_y.toFixed(2)} / λrel,z=${res.lam_rel_z.toFixed(2)}<br>kc,y=${res.kc_y.toFixed(2)} / kc,z=${res.kc_z.toFixed(2)}</td><td>§6.23/6.24 ≤ 1</td><td>${tBar(res.taux_flamb)}</td><td>${res.ok_fl?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Cisaillement</td><td>τd=${res.tau_d.toFixed(2)} MPa</td><td>fv,d=${res.fv_d.toFixed(2)} MPa</td><td>${tBar(res.taux_cis)}</td><td>${res.ok_cis?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèche inst. (${res.w_inst_label}) ⊥ rampant</td><td>w=${res.w_inst_dim.toFixed(2)} mm (L/${Math.round(L*1000/Math.max(res.w_inst_dim,0.01))})</td><td>L/150=${res.fl_lim_inst.toFixed(1)} mm</td><td>${tBar(res.taux_fl_inst)}</td><td>${res.ok_fi?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+        <tr><td>Flèche finale (${res.w_fin_label})</td><td>wfin=${res.w_fin.toFixed(2)} mm</td><td>L/150=${res.fl_lim_fin.toFixed(1)} mm</td><td>${tBar(res.taux_fl_fin)}</td><td>${res.ok_ff?'<span class="ok">✓</span>':'<span class="nok">✗</span>'}</td></tr>
+      </table>
+      <hr class="sep">
+      <div class="footer-res">R_G=${res.R_G_v.toFixed(2)} kN | R_S=${res.R_S_v.toFixed(2)} kN | R_Qe=${res.R_Qe_v.toFixed(2)} kN<br>
+      <small style="color:#999;">EC5 Cl.2 — kmod=0.9 — kdef=${props.kdef} — γM=${props.gamma_M} — Calcul indicatif.</small></div>
+    </div>`;
+}
+
+// ── Système de langue ──
+let currentLang = 'fr';
+const i18n = {
+  fr: {
+    h1: 'Calculateur Bois — EC5',
+    subtitle: 'Panne & Chevron — Bois Massif / Lamellé Collé',
+    panne: "Panne d'aplomb", 'panne-dev': 'Panne déversée', chevron: 'Chevron',
+    materiau: 'Matériau', geometrie: 'Géométrie', charges: 'Charges', section: 'Section',
+    bm: 'Bois Massif', bm_sub: 'inclut BMR / DUO-TRIO (h max 240 mm)', lc: 'Lamellé Collé GL24h',
+    portee: 'Portée (m) :', entraxe: 'Entraxe — bande chargement (m) :', pente: 'Pente du toit (%) :',
+    g_label: 'Charge permanente G — rampant (kg/m²) :', hint_g_panne: 'Couverture + isolant (PP auto)',
+    hint_g_chev: 'Couverture + isolant (PP chevron auto)',
+    neige_label: 'Neige :', opt_manuel: 'Manuel', opt_auto: 'Zone + Altitude',
+    sk_hint: 'sk au sol (kg/m²) avant correction pente',
+    qe_label: 'Charge d\'entretien Qe (kg) :', qe_hint: 'Force ponctuelle au milieu (0 si aucune)',
+    fleche_label: 'Flèche limite (Qe ou S) :',
+    btn_calc: '🪵 Lancer le calcul EC5 & Optimiser',
+    cgu: 'CGU',
+    mention: '⚠️ Calcul indicatif EC5 — Ne pas utiliser pour l\'exécution',
+    ok: '✓', nok: '✗',
+    splash_titre: 'Outil d\'esquisse uniquement',
+    splash_txt: 'Cet outil est destiné exclusivement au <strong>pré-dimensionnement en phase d\'esquisse</strong> (EC5).<br><br><strong>Les résultats doivent être validés par un bureau d\'études structure.</strong><br><br>En utilisant cet outil, vous acceptez les <a href="#" onclick="openCGU(event)" style="color:#2d4a1e;font-weight:700;">Mentions légales et CGU</a>.',
+    splash_btn: 'J\'accepte et je comprends',
+    cgu_titre: '📋 Mentions légales — Limitation de responsabilité et usage (EC5)',
+    cgu_close: 'Fermer',
+    fleche_desac: '⚠️ Chevrons : L/150 fixe (EC5 toiture) — sélecteur désactivé',
+    fleche_info: 'Pour pannes — chevrons : L/150 fixe EC5 toiture',
+  },
+  en: {
+    h1: 'Timber Calculator — EC5',
+    subtitle: 'Purlin & Rafter — Solid Wood / Glulam',
+    panne: 'Plumb purlin', 'panne-dev': 'Inclined purlin', chevron: 'Rafter',
+    materiau: 'Material', geometrie: 'Geometry', charges: 'Loads', section: 'Section',
+    bm: 'Solid Wood', bm_sub: 'incl. DUO/TRIO (h max 240 mm)', lc: 'Glulam GL24h',
+    portee: 'Span (m):', entraxe: 'Spacing — tributary width (m):', pente: 'Roof slope (%):',
+    g_label: 'Permanent load G — slope (kg/m²):', hint_g_panne: 'Roofing + insulation (self-weight auto)',
+    hint_g_chev: 'Roofing + insulation (rafter self-weight auto)',
+    neige_label: 'Snow:', opt_manuel: 'Manual', opt_auto: 'Zone + Altitude',
+    sk_hint: 'sk ground snow (kg/m²) before slope factor',
+    qe_label: 'Maintenance load Qe (kg):', qe_hint: 'Point load at midspan (0 if none)',
+    fleche_label: 'Deflection limit (Qe or S):',
+    btn_calc: '🪵 Run EC5 calculation & Optimize',
+    cgu: 'Terms',
+    mention: '⚠️ Indicative EC5 calculation — Do not use for execution',
+    ok: '✓', nok: '✗',
+    splash_titre: 'Preliminary design tool only',
+    splash_txt: 'This tool is intended exclusively for <strong>preliminary structural sizing at sketch stage</strong> (EC5).<br><br><strong>Results must be validated by a structural engineering office.</strong><br><br>By using this tool, you accept the <a href="#" onclick="openCGU(event)" style="color:#2d4a1e;font-weight:700;">Legal notices & Terms</a>.',
+    splash_btn: 'I accept and understand',
+    cgu_titre: '📋 Legal Notice — Limitation of Liability and Use (EC5)',
+    cgu_close: 'Close',
+    fleche_desac: '⚠️ Rafters: L/150 fixed (EC5 roofing) — selector disabled',
+    fleche_info: 'For purlins — rafters: L/150 fixed EC5',
+  }
+};
+
+function toggleLang() {
+  currentLang = currentLang === 'fr' ? 'en' : 'fr';
+  document.getElementById('btn-lang').textContent = currentLang === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR';
+  applyLang();
+}
+
+function applyLang() {
+  const t = i18n[currentLang];
+  document.getElementById('t-h1').textContent        = t.h1;
+  document.getElementById('t-subtitle').textContent  = t.subtitle;
+  document.getElementById('t-panne').textContent     = t.panne;
+  document.getElementById('t-panne-dev').textContent = t['panne-dev'];
+  document.getElementById('t-chevron').textContent   = t.chevron;
+  document.getElementById('t-materiau').textContent  = t.materiau;
+  document.getElementById('t-geometrie').textContent = t.geometrie;
+  document.getElementById('t-charges').textContent   = t.charges;
+  document.getElementById('t-section').textContent   = t.section;
+  document.getElementById('t-bm').textContent        = t.bm;
+  document.getElementById('t-bm-sub').textContent    = t.bm_sub;
+  document.getElementById('t-lc').textContent        = t.lc;
+  document.getElementById('t-portee').textContent    = t.portee;
+  document.getElementById('t-entraxe').textContent   = t.entraxe;
+  document.getElementById('t-pente').textContent     = t.pente;
+  document.getElementById('t-g-label').textContent   = t.g_label;
+  document.getElementById('hint-g').textContent      = calcActif==='panne' ? t.hint_g_panne : t.hint_g_chev;
+  document.getElementById('t-neige-label').textContent = t.neige_label;
+  document.getElementById('t-opt-manuel').textContent  = t.opt_manuel;
+  document.getElementById('t-opt-auto').textContent    = t.opt_auto;
+  document.getElementById('t-sk-hint').textContent   = t.sk_hint;
+  document.getElementById('t-qe-label').textContent  = t.qe_label;
+  document.getElementById('t-qe-hint').textContent   = t.qe_hint;
+  document.getElementById('t-cgu').textContent       = t.cgu;
+  document.getElementById('btn-calc').textContent    = t.btn_calc;
+  // Splash
+  document.querySelector('.modal-box h2').textContent    = t.splash_titre;
+  document.querySelector('.modal-box p').innerHTML       = t.splash_txt;
+  document.querySelector('.btn-accept').textContent      = t.splash_btn;
+  document.querySelector('.cgu-box h2').textContent      = t.cgu_titre;
+  document.querySelector('.btn-close-cgu').textContent   = t.cgu_close;
+  // Fleche hint
+  const hf = document.getElementById('hint-fleche');
+  if (hf) hf.textContent = calcActif==='chevron' ? t.fleche_desac : t.fleche_info;
+  // Zone résultats : vider pour forcer recalcul
+  document.getElementById('zone_resultat').innerHTML = '';
+}
+const sk0_zones = {A1:45,A2:45,B1:55,B2:55,C1:65,C2:65,D:90,E:100};
+
+function calcSkAuto() {
+  const zone = document.getElementById('zone_neige').value;
+  const alt  = parseFloat(document.getElementById('altitude').value)||0;
+  const sk0  = sk0_zones[zone];
+  const sk   = Math.round(sk0 * (1 + Math.pow(alt/728, 2)));
+  document.getElementById('sk-auto-result').textContent =
+    `sk = ${sk} kg/m² — Zone ${zone}, sk0=${sk0}, alt. ${alt}m (EC1-1-3 AN)`;
+  document.getElementById('sk').value = sk;
+}
+
+function toggleNeigeMode() {
+  const mode = document.getElementById('neige_mode').value;
+  document.getElementById('zone-neige-manuel').style.display = mode==='manuel' ? '' : 'none';
+  document.getElementById('zone-neige-auto').style.display   = mode==='auto'   ? '' : 'none';
+  if (mode==='auto') calcSkAuto();
+}
+
+function updateSkDisplay() {}
+
+// ── Init ──
+peuplerSections();
+afficherPente(); drawSchema();
+selectCalc('panne');
+applyLang();
+
+function closeSplash(){document.getElementById('splashModal').style.display='none';try{localStorage.setItem('bois_cgu','1');}catch(e){}}
+function openCGU(e){if(e)e.preventDefault();document.getElementById('cguModal').classList.add('open');}
+function closeCGU(){document.getElementById('cguModal').classList.remove('open');}
+document.getElementById('cguModal').addEventListener('click',function(e){if(e.target===this)closeCGU();});
+(function(){try{if(localStorage.getItem('bois_cgu'))document.getElementById('splashModal').style.display='none';}catch(e){}})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/calculateur-bois/sw.js');
+  }
+</script>
+</body>
+</html>
